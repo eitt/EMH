@@ -1,0 +1,182 @@
+=== CELL 0 (MARKDOWN) ===
+<a href="https://colab.research.google.com/github/eitt/EMH/blob/main/%5B2026_1%5D_%5BFin%5D_Difussion_Model_EHM.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
+=== CELL 1 (MARKDOWN) ===
+# Pipeline
+
+=== CELL 2 (CODE) ===
+import numpy as np
+import pandas as pd
+import yfinance as yf
+import torch
+import torch.nn as nn
+from captum.attr import IntegratedGradients
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ==========================================
+# 1. PARÁMETROS DEL EXPERIMENTO DE SENSIBILIDAD
+# ==========================================
+TICKERS = ['EWZ', 'EWW', 'ECH', 'GXG']
+ACTIVOS_NOMBRES = ['Brasil (EWZ)', 'México (EWW)', 'Chile (ECH)', 'Colombia (GXG)']
+VENTANAS_L = [10, 21, 42]  # Memoria histórica: 2 semanas, 1 mes, 2 meses
+HORIZONTES_H = [1, 5, 10]  # Predicción a: 1 día, 1 semana, 2 semanas
+TEST_SAMPLES = 100
+Z_SCORE_THRESHOLD = 2.5    # Umbral estadístico para rechazar EMH
+
+# ==========================================
+# 2. INGESTA Y PREPROCESAMIENTO CAUSAL (GLOBAL)
+# ==========================================
+print("1. Descargando datos desde Yahoo Finance...")
+def get_processed_data(tickers, start='2018-01-01', end='2023-12-31'):
+    data = yf.download(tickers, start=start, end=end)['Close']
+    vols = yf.download(tickers, start=start, end=end)['Volume']
+
+    mask = ((~data.isna()) & (vols > 0)).astype(float)
+    data_fill = data.ffill()
+    returns = np.log(data_fill / data_fill.shift(1)).fillna(0) * mask
+
+    amihud = (returns.abs() / (vols * data_fill + 1e-8)).fillna(0)
+    amihud = (amihud - amihud.rolling(60).mean()) / (amihud.rolling(60).std() + 1e-8)
+
+    return returns, mask, amihud.fillna(0)
+
+ret, msk, ami = get_processed_data(TICKERS)
+
+# ==========================================
+# 3. FUNCIONES CORE: TENSORES Y MODELO
+# ==========================================
+def build_regression_tensors(returns, mask, amihud, L, H):
+    X, H_ctx, M_tgt = [], [], []
+    for i in range(60, len(returns) - H):
+        target_ret = returns.iloc[i+1 : i+1+H].sum(axis=0).values
+        X.append(target_ret)
+        M_tgt.append(mask.iloc[i+H].values)
+
+        h_t = np.concatenate([
+            returns.iloc[i-L+1 : i+1].values,
+            mask.iloc[i-L+1 : i+1].values,
+            amihud.iloc[i-L+1 : i+1].values
+        ], axis=1)
+        H_ctx.append(h_t)
+
+    return (torch.tensor(np.array(X), dtype=torch.float32),
+            torch.tensor(np.array(H_ctx), dtype=torch.float32))
+
+class DiffusionRegressionNet(nn.Module):
+    def __init__(self, target_dim=4, context_dim=12, L=21):
+        super().__init__()
+        self.time_mlp = nn.Sequential(nn.Linear(1, 32), nn.SiLU(), nn.Linear(32, 32))
+        self.net = nn.Sequential(
+            nn.Linear(target_dim + 32 + (L * context_dim), 256),
+            nn.SiLU(), nn.Linear(256, 128), nn.SiLU(), nn.Linear(128, target_dim)
+        )
+
+    def forward(self, x_noisy, t, h_context):
+        t_emb = self.time_mlp(t.float().unsqueeze(1))
+        h_flat = h_context.view(h_context.shape[0], -1)
+        return self.net(torch.cat([x_noisy, t_emb, h_flat], dim=1))
+
+class XAI_Wrapper(nn.Module):
+    def __init__(self, m): super().__init__(); self.m = m
+    def forward(self, h, x_n, t): return self.m(x_n, t, h)
+
+# ==========================================
+# 4. FUNCIÓN DE VISUALIZACIÓN XAI CONDICIONAL
+# ==========================================
+def plot_xai_heatmap(attributions, L, H, max_z, features_nombres):
+    importance = attributions.abs().mean(dim=0).detach().numpy()
+
+    plt.figure(figsize=(14, 8))
+    sns.heatmap(importance, cmap='magma',
+                xticklabels=features_nombres,
+                yticklabels=[f't-{L-i}' for i in range(L)],
+                linewidths=0.5)
+
+    plt.title(f"🚨 INEFICIENCIA DETECTADA (H={H}, L={L}) | Max Z-Score: {max_z:.2f}\n"
+              f"El modelo usa esta huella histórica para predecir el futuro", fontsize=14)
+    plt.xlabel("Características Estructurales (Todos los Activos LatAm)")
+    plt.ylabel("Rezagos Históricos")
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    plt.show()
+
+# ==========================================
+# 5. BUCLE DE SENSIBILIDAD Y AUDITORÍA
+# ==========================================
+print("\n2. Iniciando Análisis de Sensibilidad Multivariable...")
+resultados = []
+
+# Nombres de las características para el eje X de los gráficos
+feat_names = [f"Ret_{a}" for a in ACTIVOS_NOMBRES] + \
+             [f"Mask_{a}" for a in ACTIVOS_NOMBRES] + \
+             [f"Amihud_{a}" for a in ACTIVOS_NOMBRES]
+
+for L in VENTANAS_L:
+    for H in HORIZONTES_H:
+        print(f" -> Evaluando: Lookback L={L} dias, Horizonte H={H} dias")
+
+        # 1. Preparar Datos y Modelo
+        X_tgt, H_ctx = build_regression_tensors(ret, msk, ami, L, H)
+        model = DiffusionRegressionNet(target_dim=len(TICKERS), L=L)
+        # Nota: En un entorno real, aquí se entrena el modelo con el 'Diffusion Loss'
+
+        # 2. XAI (Integrated Gradients)
+        H_test = H_ctx[-TEST_SAMPLES:]
+        noise = torch.randn(TEST_SAMPLES, len(TICKERS))
+        t_eval = torch.full((TEST_SAMPLES,), 50).long()
+
+        wrapper = XAI_Wrapper(model)
+        ig = IntegratedGradients(wrapper)
+
+        # Promediamos la atribución sobre los 4 activos para una visión global de LatAm
+        attr_total = 0
+        for target_idx in range(len(TICKERS)):
+            attr, _ = ig.attribute(H_test, additional_forward_args=(noise, t_eval), target=target_idx, return_convergence_delta=True)
+            attr_total += attr
+        attr_mean = attr_total / len(TICKERS)
+
+        # 3. Test Estadístico EMH
+        importance_matrix = attr_mean.abs().mean(dim=0).detach().numpy()
+        media_ruido = np.mean(importance_matrix)
+        std_ruido = np.std(importance_matrix) + 1e-8
+
+        z_scores = (importance_matrix - media_ruido) / std_ruido
+        max_z = np.max(z_scores)
+
+        # Lógica de Decisión
+        if max_z > Z_SCORE_THRESHOLD:
+            estado_emh = "Rechazada 🔴"
+            # SOLO graficamos si se rechaza la eficiencia
+            plot_xai_heatmap(attr_mean, L, H, max_z, feat_names)
+        else:
+            estado_emh = "Aceptada 🟢"
+
+        resultados.append({'Lookback (L)': L, 'Horizonte (H)': H, 'Estado EMH': estado_emh, 'Max Z-Score': round(max_z, 2)})
+
+# ==========================================
+# 6. REPORTES RESUMEN (TABLAS Y GRÁFICOS)
+# ==========================================
+df_resultados = pd.DataFrame(resultados)
+print("\n=== RESUMEN GLOBAL DE LA HIPÓTESIS DE EFICIENCIA EN LATAM ===")
+print(df_resultados.to_string(index=False))
+
+# Matriz Resumen Visual
+pivot_z = df_resultados.pivot(index="Lookback (L)", columns="Horizonte (H)", values="Max Z-Score")
+
+plt.figure(figsize=(8, 5))
+# Colormap: verde (bajo z-score, eficiente) a rojo (alto z-score, ineficiente)
+sns.heatmap(pivot_z, annot=True, cmap="RdYlGn_r", center=Z_SCORE_THRESHOLD,
+            cbar_kws={'label': 'Nivel de Ineficiencia (Z-Score)'})
+plt.title("Mapa de Calor de Eficiencia: L vs H\n(Rojo = Ineficiente/Predecible, Verde = Eficiente/Ruido)")
+plt.show()
+
+=== CELL 3 (CODE) ===
+
+
+=== CELL 4 (CODE) ===
+
+
+=== CELL 5 (CODE) ===
+
+

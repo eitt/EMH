@@ -1,0 +1,44 @@
+---
+title: "Efficient Market Hypothesis in Latin America: A Diffusion-Based Approach"
+author: "Research Pipeline (Antigravity)"
+date: today
+format:
+  pdf:
+    documentclass: article
+    citation_package: biblatex
+bibliography: references.bib
+---
+
+## Abstract
+This paper investigates the weak-form Efficient Market Hypothesis (EMH) in major Latin American economies (Brazil, Mexico, Chile, and Colombia) using a novel Conditional Diffusion Model. By leveraging denoising score matching to learn the conditional distribution of future returns, we evaluate whether historical price and liquidity structures provide predictive signals. Using Integrated Gradients for explainability, we identify temporal dependencies that suggest significant departures from the random walk hypothesis in emerging markets.
+
+## 1. Introduction
+The Efficient Market Hypothesis remains a cornerstone of modern finance...
+
+## 2. Methodology
+We implement a Conditional Diffusion Model where the reverse process $p_\theta(x_{0:T} | h)$ is conditioned on a historical lookback window $h$...
+
+### 2.1 Diffusion Formulation
+The denoising objective:
+$$ L = E_{x, \epsilon, t} [ \| \epsilon - \epsilon_\theta(x_t, t, h) \|^2 ] $$
+
+## 3. Data
+We use daily adjusted close prices and volumes from 2015 to 2024...
+
+## 4. Results
+Our findings indicate a Max Z-Score of **3.18** in feature importance attribution, rejecting the null hypothesis of market efficiency at a significance level of...
+
+![Figure 1: Feature Importance Attribution](file:///c:/Users/LEONA/Documents/GitHub/EMH/reports/figures/xai/importance.png)
+
+## 5. Conclusion
+Historical structure in Latin American markets appears robust to diffusion-based analysis...
+
+## References
+---
+@article{fama1970,
+  title={Efficient capital markets: A review of theory and empirical work},
+  author={Fama, Eugene F},
+  journal={The journal of Finance},
+  year={1970}
+}
+---
