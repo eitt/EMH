@@ -55,21 +55,44 @@ def xai_viz():
     st.title("Explainable AI: Diffusion Footprint")
     st.write("This visualization shows which historical lags and features the diffusion model uses to make its noise predictions.")
     
-    if os.path.exists('reports/figures/xai/importance.png'):
-        st.image('reports/figures/xai/importance.png', caption="Integrated Gradients Attribution Heatmap")
-    else:
-        st.warning("XAI heatmap not found. Run the XAI pipeline first.")
+    col1, col2 = st.columns(2)
+    with col1:
+        if os.path.exists('reports/figures/xai/importance_heatmap.png'):
+            st.image('reports/figures/xai/importance_heatmap.png', caption="Integrated Gradients Attribution Heatmap")
+        else:
+            st.warning("XAI heatmap not found. Run the XAI pipeline first.")
+            
+    with col2:
+        if os.path.exists('reports/figures/xai/top_features_bar.png'):
+            st.image('reports/figures/xai/top_features_bar.png', caption="Top 10 Predictors by Magnitude")
 
-def playground():
-    st.title("Research Playground")
-    st.write("Run a custom inference to see the model's 'denoising' capability.")
+def experiments_page():
+    st.title("Experiment Results & Statistical Claims")
+    st.markdown("""
+    This section evaluates the Conditional Diffusion model against baselines across multiple horizons ($H$) and lookback windows ($L$).
+    Statistical significance is determined using the **Diebold-Mariano test** compared to a Random Walk baseline.
+    """)
     
-    L = st.slider("Lookback Window (L)", 10, 60, 21)
-    H = st.slider("Forecast Horizon (H)", 1, 10, 5)
-    
-    if st.button("Generate Forecast Sample"):
-        st.success("Sample generated. (In a full app, this would run the diffusion reverse process in real-time)")
-        st.info("See reports/logs for detailed experiments.")
+    try:
+        df = pd.read_csv('reports/tables/experiment_results.csv')
+        
+        st.subheader("Hypothesis Testing Table")
+        st.write("A negative DM Stat indicates the model performs *worse* than the Random Walk in terms of MSE. A positive DM Stat indicates it performs *better*. (Note: Diffusion loop in this demo uses low epochs for speed, hence lower accuracy).")
+        st.dataframe(df.style.format({'RMSE': '{:.4f}', 'DM_Stat': '{:.2f}', 'P_Value': '{:.4e}'}))
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("RMSE Comparison")
+            if os.path.exists('reports/figures/rmse_comparison.png'):
+                st.image('reports/figures/rmse_comparison.png', use_container_width=True)
+                
+        with col2:
+            st.subheader("Significance Heatmap ($p$-values)")
+            if os.path.exists('reports/figures/pvalue_heatmap.png'):
+                st.image('reports/figures/pvalue_heatmap.png', use_container_width=True)
+
+    except Exception as e:
+        st.error(f"Could not load experiment results: {e}. Run the experiment loop first.")
 
 if page == "Overview":
     home_page()
@@ -78,4 +101,4 @@ elif page == "Data Explorer":
 elif page == "Diffusion XAI":
     xai_viz()
 elif page == "Playground":
-    playground()
+    experiments_page()

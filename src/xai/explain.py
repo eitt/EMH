@@ -43,18 +43,39 @@ def compute_attributions(model, dataloader, device='cpu'):
     mean_attr = torch.stack(asset_attributions).mean(dim=0)
     return mean_attr
 
-def plot_importance(attr, L, feature_names, output_path='reports/figures/xai/importance.png'):
+def plot_importance(attr, L, feature_names, output_dir='reports/figures/xai/'):
+    import os
+    import seaborn as sns
+    sns.set_theme(style="whitegrid", context="paper", font_scale=1.2)
+    os.makedirs(output_dir, exist_ok=True)
+    
     # attr: [batch, L*N*F]
-    # Reshape to [L, N*F]
     importance = attr.abs().mean(dim=0).view(L, -1).detach().cpu().numpy()
     
+    # 1. Heatmap
     plt.figure(figsize=(12, 8))
-    sns.heatmap(importance, cmap='magma', xticklabels=feature_names, yticklabels=[f't-{L-i}' for i in range(L)])
-    plt.title("Feature Importance Attribution (Integrated Gradients)")
-    plt.xlabel("Features")
-    plt.ylabel("Lag")
+    cmap = sns.color_palette("mako", as_cmap=True)
+    sns.heatmap(importance, cmap=cmap, xticklabels=feature_names, yticklabels=[f't-{L-i}' for i in range(L)])
+    plt.title("Feature Importance Attribution (Integrated Gradients)", weight='bold')
+    plt.xlabel("Market Features")
+    plt.ylabel("Lag (Days)")
     plt.tight_layout()
-    plt.savefig(output_path)
+    plt.savefig(os.path.join(output_dir, 'importance_heatmap.png'), dpi=300)
+    plt.close()
+    
+    # 2. Top Features Bar Chart (Aggregated over time)
+    agg_importance = importance.sum(axis=0)
+    indices = np.argsort(agg_importance)[::-1]
+    
+    plt.figure(figsize=(10, 6))
+    COLORS = sns.color_palette("colorblind", 1)
+    plt.bar(np.array(feature_names)[indices][:10], agg_importance[indices][:10], color=COLORS)
+    plt.title("Top 10 Aggregate Dominant Predictors", weight='bold')
+    plt.xlabel("Feature")
+    plt.ylabel("Total Attribution Magnitude")
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'top_features_bar.png'), dpi=300)
     plt.close()
     
 def calculate_emh_zscore(attr, threshold=2.5):
