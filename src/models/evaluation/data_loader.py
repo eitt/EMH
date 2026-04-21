@@ -46,12 +46,19 @@ def get_dataloaders(L, H, batch_size=32, train_split=0.8):
     dataset = TimeSeriesDataset(returns, mask, amihud, L, H)
     
     train_size = int(len(dataset) * train_split)
-    val_size = len(dataset) - train_size
+    holdout_gap = max(H - 1, 0)
+    val_start = train_size + holdout_gap
+
+    if val_start >= len(dataset):
+        raise ValueError(
+            "Validation split is empty after applying horizon gap. "
+            "Reduce H or train_split."
+        )
     
     # Simple split (CAUSAL: no shuffling before split)
     # We take the first train_size indices for training
     train_dataset = torch.utils.data.Subset(dataset, range(train_size))
-    val_dataset = torch.utils.data.Subset(dataset, range(train_size, len(dataset)))
+    val_dataset = torch.utils.data.Subset(dataset, range(val_start, len(dataset)))
     
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)

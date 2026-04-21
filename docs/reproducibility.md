@@ -4,43 +4,46 @@ Follow these steps to reproduce the research results.
 
 ## 1. Environment Setup
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 *Note: Python 3.10+ is recommended.*
 
-## 2. Data Ingestion
-Download the latest market data:
-```bash
-$env:PYTHONPATH="."
-python src/data/ingest.py
-```
-This saves raw data to `data/raw/` and a symlink to `latest_raw.csv`.
+## 2. One-Command Pipeline (Recommended)
+Run the full workflow from processed data to model outputs:
 
-## 3. Preprocessing
-Clean and transform the data:
 ```bash
-python src/data/preprocess.py
+python scripts/run_pipeline.py
 ```
 
-## 4. Modeling (Training)
-Train the Conditional Diffusion Model:
-```bash
-python src/models/trainer.py
-```
-Best weights are saved to `reports/logs/best_diffusion_model.pt`.
+Common options:
 
-## 5. Explainability (XAI)
-Generate feature importance and EMH Z-scores:
 ```bash
-python src/xai/explain.py
+python scripts/run_pipeline.py --ingest
+python scripts/run_pipeline.py --skip-xai
+python scripts/run_pipeline.py --skip-train --skip-experiments
 ```
-Figures are saved to `reports/figures/xai/`.
 
-## 6. Visualization (App)
+## 3. Manual Step-by-Step Execution
+Use this only when debugging a specific stage.
+
+```bash
+PYTHONPATH=. python src/data/ingest.py
+PYTHONPATH=. python src/data/preprocess.py
+PYTHONPATH=. python src/models/trainer.py
+PYTHONPATH=. python src/experiments/run_loop.py
+PYTHONPATH=. python src/visualization/plot_results.py
+PYTHONPATH=. python src/xai/explain.py
+```
+
+Best model weights are saved to `reports/logs/best_diffusion_model.pt`.  
+Tables and figures are saved under `reports/tables/` and `reports/figures/`.
+
+## 4. Visualization (App)
 Launch the interactive playground:
+
 ```bash
 streamlit run app/main.py
 ```
 
 ## Seed Control
-All stochastic processes (diffusion noise, model initialization) are seeded in the `src/utils/` modules (to be implemented/finalized) to ensure consistency across runs.
+Current scripts do not enforce one global seed entrypoint yet. For strict reproducibility, set seeds in each experiment script and record them in the report metadata.

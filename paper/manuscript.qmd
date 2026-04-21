@@ -1,44 +1,180 @@
 ---
-title: "Efficient Market Hypothesis in Latin America: A Diffusion-Based Approach"
+title: "Weak-Form Efficiency in Latin American Equity ETFs: Preliminary Evidence from Baseline and Conditional Diffusion Forecasting"
 author: "Research Pipeline (Antigravity)"
-date: today
+date: last-modified
 format:
   pdf:
     documentclass: article
     citation_package: biblatex
+    number-sections: true
+    toc: true
 bibliography: references.bib
 ---
 
 ## Abstract
-This paper investigates the weak-form Efficient Market Hypothesis (EMH) in major Latin American economies (Brazil, Mexico, Chile, and Colombia) using a novel Conditional Diffusion Model. By leveraging denoising score matching to learn the conditional distribution of future returns, we evaluate whether historical price and liquidity structures provide predictive signals. Using Integrated Gradients for explainability, we identify temporal dependencies that suggest significant departures from the random walk hypothesis in emerging markets.
+This paper reassesses weak-form efficiency in four Latin American equity ETFs (EWZ, EWW, ECH, GXG) using a forecasting-based design rather than a pure market-efficiency test battery. We compare a conditional diffusion model to three transparent benchmarks (random walk, historical mean, ridge regression) on daily data from 2015-01-02 to 2023-12-29, under lookback windows $L \in \{10,21,42\}$ and horizons $H \in \{1,5\}$. Identification is statistical and associational: the question is whether lagged returns and liquidity proxies improve out-of-sample prediction over a random-walk benchmark. We implement Diebold-Mariano comparisons against the random walk and report full model-by-configuration errors.
+
+Two results dominate. First, after enforcing a non-overlapping train/validation boundary for multi-day horizons, the random walk remains the strongest model by RMSE in all six configurations. Second, Diebold-Mariano statistics are uniformly negative for the diffusion model, indicating significantly worse predictive accuracy than the random walk. Explainability diagnostics (integrated-gradients max-$z$) remain above the heuristic threshold 2.5 in repeated seeds, but they are generated from a model with inferior forecast accuracy and therefore do not constitute evidence against weak-form efficiency. The evidence in this draft is best interpreted as preliminary support for the difficulty of extracting stable short-horizon linear or nonlinear predictability from these ETF returns.
 
 ## 1. Introduction
-The Efficient Market Hypothesis remains a cornerstone of modern finance...
+Weak-form market efficiency remains a central benchmark in empirical finance, especially in emerging markets where liquidity frictions, integration shifts, and regime changes can generate episodic predictability @fama1970; @fama1991; @harvey1995; @bekaertharvey1995. The literature documents that predictability claims are highly sensitive to design choices, split logic, and benchmark selection @welchgoyal2008; @campbellthompson2008; @rapach2010.
 
-## 2. Methodology
-We implement a Conditional Diffusion Model where the reverse process $p_\theta(x_{0:T} | h)$ is conditioned on a historical lookback window $h$...
+This study asks a narrow question:
 
-### 2.1 Diffusion Formulation
-The denoising objective:
-$$ L = E_{x, \epsilon, t} [ \| \epsilon - \epsilon_\theta(x_t, t, h) \|^2 ] $$
+Can a conditional diffusion forecaster, fed only lagged returns and liquidity proxies, improve out-of-sample return forecasts for major Latin American equity ETFs relative to a random-walk benchmark?
 
-## 3. Data
-We use daily adjusted close prices and volumes from 2015 to 2024...
+The empirical contribution is a transparent multi-model forecast comparison across four Latin American ETFs and six $(L,H)$ forecasting configurations, with explicit Diebold-Mariano inference against the random walk. The methodological contribution is to place a generative diffusion model inside a strict benchmark-first forecast evaluation protocol, including a horizon gap at the train/validation boundary for $H>1$.
 
-## 4. Results
-Our findings indicate a Max Z-Score of **3.18** in feature importance attribution, rejecting the null hypothesis of market efficiency at a significance level of...
+Inference is intentionally conservative. We test predictive content, not trading profitability. Rejection of equal forecast accuracy does not by itself imply economically exploitable inefficiency after costs, nor a structural causal mechanism.
 
-![Figure 1: Feature Importance Attribution](file:///c:/Users/LEONA/Documents/GitHub/EMH/reports/figures/xai/importance.png)
+## 2. Literature Positioning and Gap
+Three strands motivate the design.
 
-## 5. Conclusion
-Historical structure in Latin American markets appears robust to diffusion-based analysis...
+First, classic efficiency and predictability work shows that return-forecast evidence is fragile and model-dependent, requiring disciplined out-of-sample evaluation @lomackinlay1988; @welchgoyal2008; @campbellthompson2008.
 
-## References
----
-@article{fama1970,
-  title={Efficient capital markets: A review of theory and empirical work},
-  author={Fama, Eugene F},
-  journal={The journal of Finance},
-  year={1970}
-}
----
+Second, emerging-market and Latin American evidence supports time-varying efficiency, often interpreted through adaptive-market logic, but mostly via variance-ratio and related independence tests rather than multivariate conditional forecast models @urrutia1995; @lo2004; @cruzhernandez2024.
+
+Third, machine-learning asset-pricing work documents nonlinear predictive structure in large cross-sections, but predominantly in developed-market settings and with different targets than the present ETF-level short-horizon return task @gu2020. Diffusion methods are now technically mature in machine learning @ho2020; @song2021, and recent finance applications are emerging @cho2026, but evidence for Latin American weak-form questions under explicit benchmark-first forecast testing is still limited.
+
+The actionable gap in this repository is therefore not "absence of EMH tests," but lack of a coherent, benchmark-disciplined, multivariate nonlinear forecasting comparison for Latin American ETF returns using a modern generative architecture and explicit forecast-accuracy inference.
+
+## 3. Data and Variable Construction
+### 3.1 Data Source and Scope
+Raw adjusted prices and volumes are downloaded from Yahoo Finance (`yfinance`) for EWZ (Brazil), EWW (Mexico), ECH (Chile), and GXG (Colombia). The processed sample has 2,264 daily observations from 2015-01-02 to 2023-12-29.
+
+### 3.2 Variable Definitions
+For asset $i$ at day $t$, let $P_{i,t}$ be adjusted close and $V_{i,t}$ volume. The trading mask is
+\begin{equation}
+m_{i,t} = \mathbb{1}\{P_{i,t}\text{ observed and }V_{i,t}>0\}.
+\end{equation}
+
+Log return is
+\begin{equation}
+r_{i,t} = \log\!\left(\frac{P_{i,t}}{P_{i,t-1}}\right)m_{i,t}.
+\label{eq:return}
+\end{equation}
+
+Amihud illiquidity proxy is (@amihud2002):
+\begin{equation}
+\text{illiq}_{i,t} = \frac{|r_{i,t}|}{P_{i,t}V_{i,t}+\varepsilon}, \qquad \varepsilon=10^{-8},
+\label{eq:amihud}
+\end{equation}
+standardized with a 60-day rolling window:
+\begin{equation}
+z^{\text{illiq}}_{i,t}=
+\frac{\text{illiq}_{i,t}-\mu^{(60)}_{i,t}}{\sigma^{(60)}_{i,t}+\varepsilon}.
+\label{eq:amihud_z}
+\end{equation}
+
+The model context at forecast origin $t$ is the lagged tensor
+\begin{equation}
+\mathcal{X}_t=\{r_{i,\tau},m_{i,\tau},z^{\text{illiq}}_{i,\tau}\}_{i=1,\dots,N;\,\tau=t-L,\dots,t-1},
+\end{equation}
+and the horizon-$H$ target is cumulative return
+\begin{equation}
+y^{(H)}_{i,t}=\sum_{j=0}^{H-1}r_{i,t+j}.
+\label{eq:target}
+\end{equation}
+
+## 4. Econometric Strategy and Identification
+### 4.1 What Is Being Estimated
+The estimand is predictive accuracy relative to a random-walk forecast under a fixed information set of lagged market variables. The design supports statements about out-of-sample association and incremental forecast content, not causal effects.
+
+### 4.2 Split Logic and Horizon Consistency
+For each $(L,H)$, samples are ordered in time. The first 80% form training observations. For $H>1$, we enforce a boundary gap of $H-1$ observations before validation starts, preventing overlap between terminal training target windows and initial validation target windows.
+
+### 4.3 Competing Forecast Models
+We evaluate:
+1. Random walk baseline: $\hat{y}_{i,t}^{(H)}=0$.
+2. Historical mean: average lagged return in the lookback window.
+3. Ridge regression on flattened lagged features.
+4. Conditional diffusion model (MLP denoiser with context and time embeddings).
+
+For diffusion, with noise schedule $\{\beta_s\}_{s=1}^S$, $\alpha_s=1-\beta_s$, $\bar{\alpha}_s=\prod_{u=1}^s\alpha_u$, forward noising is
+\begin{equation}
+y_s=\sqrt{\bar{\alpha}_s}y_0+\sqrt{1-\bar{\alpha}_s}\,\epsilon,\qquad \epsilon\sim\mathcal{N}(0,I),
+\end{equation}
+and denoiser parameters $\theta$ solve
+\begin{equation}
+\min_\theta\;\mathbb{E}_{y_0,\epsilon,s}\left[\left\lVert \epsilon-\epsilon_\theta(y_s,s,\mathcal{X}_t)\right\rVert_2^2\right].
+\label{eq:ddpm_loss}
+\end{equation}
+
+### 4.4 Evaluation and Statistical Comparison
+Primary loss is pooled RMSE:
+\begin{equation}
+\text{RMSE}=\sqrt{\frac{1}{TN}\sum_{t=1}^{T}\sum_{i=1}^{N}(y_{i,t}^{(H)}-\hat{y}_{i,t}^{(H)})^2 }.
+\end{equation}
+
+We compare each model $m$ against random walk (rw) using Diebold-Mariano @dieboldmariano1995. With loss differential $d_t=\ell(e^{\text{rw}}_t)-\ell(e^{m}_t)$, statistic
+\begin{equation}
+\text{DM}=\frac{\bar{d}}{\sqrt{\hat{v}_d/T}}
+\end{equation}
+is reported with two-sided normal p-values. In this implementation, negative DM means the candidate model has larger loss than random walk.
+
+## 5. Preliminary Empirical Evidence
+### 5.1 Descriptive and Diagnostic Evidence
+Table 1 reports near-zero daily means, substantial dispersion, negative skewness, and high kurtosis for all four ETFs. Pairwise return correlations are moderate (roughly 0.57-0.66), consistent with regional comovement but incomplete collinearity.
+
+| ETF | Mean | Std. Dev. | Skewness | Kurtosis | ACF(1) |
+|---|---:|---:|---:|---:|---:|
+| ECH | -0.00002 | 0.01733 | -0.624 | 10.600 | -0.012 |
+| EWW | 0.00016 | 0.01597 | -1.068 | 9.448 | -0.010 |
+| EWZ | 0.00018 | 0.02365 | -1.137 | 13.272 | -0.133 |
+| GXG | -0.00020 | 0.01725 | -1.214 | 16.423 | 0.146 |
+: Summary statistics of daily log returns, 2015-01-02 to 2023-12-29. {#tbl-summary}
+
+Table 2 confirms standard stylized facts. Price levels are mostly non-stationary at conventional levels, returns are strongly stationary (ADF p-values effectively zero), and both returns and squared returns reject serial independence at lag 10, consistent with conditional heteroskedastic dynamics emphasized in ARCH/GARCH traditions @engle1982; @bollerslev1986.
+
+| ETF | ADF p-value (price) | ADF p-value (return) | Ljung-Box p-value (return, lag 10) | Ljung-Box p-value (squared return, lag 10) |
+|---|---:|---:|---:|---:|
+| ECH | 0.348 | < 1e-20 | < 1e-6 | < 1e-20 |
+| EWW | 0.805 | < 1e-20 | < 1e-5 | < 1e-20 |
+| EWZ | 0.094 | < 1e-20 | < 1e-10 | < 1e-20 |
+| GXG | 0.050 | < 1e-20 | < 1e-10 | < 1e-20 |
+: Stationarity and serial-dependence diagnostics from processed sample. {#tbl-diagnostics}
+
+### 5.2 Forecast Accuracy Results
+Table 3 shows random walk has the lowest RMSE in all six $(L,H)$ settings. Historical mean is usually second-best; ridge and diffusion underperform.
+
+| L | H | Random Walk | Historical Mean | Ridge | Diffusion |
+|---:|---:|---:|---:|---:|---:|
+| 10 | 1 | **0.01750** | 0.01828 | 0.01783 | 0.10151 |
+| 10 | 5 | **0.04156** | 0.04177 | 0.04262 | 0.10886 |
+| 21 | 1 | **0.01747** | 0.01791 | 0.01798 | 0.09800 |
+| 21 | 5 | **0.04135** | 0.04185 | 0.04336 | 0.10358 |
+| 42 | 1 | **0.01747** | 0.01774 | 0.01841 | 0.08485 |
+| 42 | 5 | **0.04129** | 0.04162 | 0.04459 | 0.10513 |
+: Out-of-sample RMSE by lookback $L$ and horizon $H$ after imposing non-overlap boundary for $H>1$. {#tbl-rmse}
+
+![RMSE comparison by lookback and horizon.](../reports/figures/rmse_comparison.png){#fig-rmse}
+
+DM comparisons in Table 4 confirm this ranking statistically. All diffusion DM statistics are strongly negative with p-values near zero; ridge is significantly worse in all six settings; historical mean is significantly worse in five of six settings.
+
+| Model vs. Random Walk | Mean DM Statistic | Significant at 5% (configs) |
+|---|---:|---:|
+| Historical Mean | -3.422 | 5 / 6 |
+| Ridge | -4.463 | 6 / 6 |
+| Diffusion | -27.843 | 6 / 6 |
+: Diebold-Mariano summary across six forecasting configurations. Negative DM implies higher loss than random walk under this implementation. {#tbl-dm-summary}
+
+![Diebold-Mariano p-value heatmap versus random walk.](../reports/figures/pvalue_heatmap.png){#fig-dm}
+
+### 5.3 Explainability Evidence and Interpretation Discipline
+Integrated-gradients attribution is retained as exploratory evidence only. Across 10 seeded runs, the maximum attribution $z$-score has mean 3.176 (std. dev. 0.165, min 2.898, max 3.431), always above the heuristic threshold 2.5.
+
+This does not overturn the forecast evidence. Because diffusion underperforms all baselines in RMSE and DM tests, attribution concentration cannot be interpreted as robust evidence against weak-form efficiency in this draft.
+
+## 6. Robustness Agenda and Remaining Limitations
+This working paper is materially improved but still preliminary. Main unresolved items are:
+
+1. Single split design. A rolling-origin or expanding-window protocol is needed for regime-robust inference.
+2. Hyperparameter uncertainty. Diffusion depth, training epochs, and sampling design are not yet tuned with nested validation.
+3. Forecast-loss robustness. MAE, QLIKE, and model confidence set procedures @hansen2011 should be added.
+4. Economic significance. No transaction-cost-adjusted strategy test is implemented, so results remain statistical.
+5. Benchmark breadth. No GARCH-family, VAR, or local-projection benchmark is currently estimated.
+
+## 7. Conclusion
+Under the current data and implementation, benchmark models dominate conditional diffusion for short-horizon ETF return forecasting in Brazil, Mexico, Chile, and Colombia proxies. The most defensible interpretation is not "diffusion rejects EMH," but that this pipeline currently finds limited out-of-sample predictive structure beyond a random walk once benchmark discipline is imposed.
+
+The manuscript contribution is therefore methodological transparency: explicit target construction, boundary-safe validation for multi-day horizons, model-comparison inference, and separation of descriptive/XAI signals from econometric forecast evidence. Stronger claims require a fuller robustness program before journal submission.

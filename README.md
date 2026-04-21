@@ -1,4 +1,4 @@
-# EMH-LatAm: Efficient Market Hypothesis in Latin America
+﻿# EMH-LatAm: Efficient Market Hypothesis in Latin America
 
 EMH-LatAm is a reproducible research project for studying the Efficient Market Hypothesis in selected Latin American markets using conditional diffusion models and explainable artificial intelligence.
 
@@ -35,15 +35,14 @@ The repository includes the following components:
 
 ```text
 .
-├── app/            # Web application for interactive exploration
-├── configs/        # Configuration files for data, models, and experiments
-├── data/           # Raw, interim, and processed datasets
-├── docs/           # Documentation, theory, methodology, and audit notes
-├── notebooks/      # Research notebooks and archived baseline work
-├── paper/          # Manuscript source, references, and appendices
-├── reports/        # Generated figures, tables, logs, and model summaries
-├── src/            # Modular source code for data, models, evaluation, and XAI
-└── tests/          # Unit and integration tests
+|- app/            # Streamlit interface
+|- archive/        # Archived legacy notebook artifacts
+|- data/           # Raw and processed datasets
+|- docs/           # Documentation, theory, and audit notes
+|- paper/          # Manuscript and bibliography
+|- reports/        # Generated figures, tables, and logs
+|- scripts/        # Orchestration + literature tooling
+`- src/            # Core research code (data/model/eval/xai)
 ````
 
 ## Installation
@@ -51,33 +50,33 @@ The repository includes the following components:
 Create the environment and install the required dependencies:
 
 ```bash
-pip install -r requirements.txt
-```
-
-If the project is configured through `pyproject.toml`, install it in editable mode:
-
-```bash
 pip install -e .
 ```
 
 ## Quick Start
 
-### Data ingestion and preprocessing
+### Unified pipeline (recommended)
+
+```bash
+python scripts/run_pipeline.py
+```
+
+Options:
+
+```bash
+python scripts/run_pipeline.py --ingest
+python scripts/run_pipeline.py --skip-xai
+python scripts/run_pipeline.py --skip-train --skip-experiments
+```
+
+### Step-by-step (manual)
 
 ```bash
 PYTHONPATH=. python src/data/ingest.py
 PYTHONPATH=. python src/data/preprocess.py
-```
-
-### Model training
-
-```bash
 PYTHONPATH=. python src/models/trainer.py
-```
-
-### Explainability analysis
-
-```bash
+PYTHONPATH=. python src/experiments/run_loop.py
+PYTHONPATH=. python src/visualization/plot_results.py
 PYTHONPATH=. python src/xai/explain.py
 ```
 
@@ -96,7 +95,7 @@ The current implementation focuses on selected Latin American market proxies:
 - Chile: ECH
 - Colombia: GXG
 
-All datasets, transformations, and preprocessing decisions should be documented in the corresponding files under `docs/data/` and `configs/data/`.
+All datasets, transformations, and preprocessing decisions should be documented under `docs/data/`.
 
 ## Validation and Scientific Standards
 
@@ -145,6 +144,46 @@ To ensure reproducibility:
 - avoid modifying processed data manually,
 - document failed and exploratory experiments,
 - verify results through independent reruns before reporting them.
+
+## Paper Download Pipeline (Scopus + Unpaywall)
+
+This repository now includes a quantity-aware and latest-aware paper downloader:
+
+- `scripts/search_scopus.py`: Scopus metadata search (`title`, `doi`, `year`, `source`, `cited_by`)
+- `scripts/download_open_access.py`: DOI download via Unpaywall, optional `scihub-cli` fallback
+- `scripts/topic_batch_download.py`: end-to-end search + download workflow
+
+Set credentials in your shell profile:
+
+```bash
+export ELSEVIER_API_KEY="<your_elsevier_key>"
+export UNPAYWALL_EMAIL="<your_unpaywall_email>"
+```
+
+Standard usage:
+
+```bash
+python scripts/topic_batch_download.py --keywords "pedestrian simulation" --quantity-mode batch --outdir ./downloads
+```
+
+Latest papers (default 3-year window):
+
+```bash
+python scripts/topic_batch_download.py --keywords "pedestrian simulation" --quantity-mode batch --latest --outdir ./downloads
+```
+
+Explicit count + latest:
+
+```bash
+python scripts/topic_batch_download.py --keywords "pedestrian simulation" --target 12 --latest --outdir ./downloads
+```
+
+Search-only and DOI-only modes:
+
+```bash
+python scripts/search_scopus.py --query 'TITLE-ABS-KEY("pedestrian simulation") AND PUBYEAR > 2022' --count 20 --sort=-coverDate
+python scripts/download_open_access.py --doi "10.2307/2392994" --outdir ./downloads --scihub-fallback auto
+```
 
 ## Citation
 

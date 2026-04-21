@@ -1,0 +1,15 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local OS/editor artifacts
+.DS_Store
+Thumbs.db
+
+# Download outputs for literature scraping
+downloads/

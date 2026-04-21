@@ -40,7 +40,7 @@ def plot_pvalue_heatmap(df):
     plt.figure(figsize=(8, 6))
     
     # Filter out Random Walk since it's the baseline (p=1.0)
-    df_compare = df[df['Model'] != 'Random Walk']
+    df_compare = df[df['Model'] != 'Random Walk'].copy()
     
     # Create pivot for heatmap (L, H) vs Model P-Value
     # We will combine L and H for the Y axis

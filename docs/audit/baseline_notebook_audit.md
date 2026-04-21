@@ -1,4 +1,4 @@
-# Baseline Notebook Audit: `[2026_1]_[Fin]_Difussion_Model_EHM.ipynb`
+# Baseline Notebook Audit: `archive/legacy_notebook/[2026_1]_[Fin]_Difussion_Model_EHM.ipynb`
 
 ## Overview
 The baseline notebook provides a skeleton for a diffusion-based approach to testing the Efficient Market Hypothesis (EMH) in Latin American markets. However, the current implementation is primarily a **procedural mockup** rather than a functional research pipeline.
