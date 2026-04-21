@@ -1,6 +1,3 @@
-Here is a more professional version of the README, with no icons, no badges, and a more academic tone. I also softened the empirical claim so it reads like a research repository rather than a promotional page.
-
-````md
 # EMH-LatAm: Efficient Market Hypothesis in Latin America
 
 EMH-LatAm is a reproducible research project for studying the Efficient Market Hypothesis in selected Latin American markets using conditional diffusion models and explainable artificial intelligence.
@@ -94,10 +91,10 @@ streamlit run app/main.py
 
 The current implementation focuses on selected Latin American market proxies:
 
-* Brazil: EWZ
-* Mexico: EWW
-* Chile: ECH
-* Colombia: GXG
+- Brazil: EWZ
+- Mexico: EWW
+- Chile: ECH
+- Colombia: GXG
 
 All datasets, transformations, and preprocessing decisions should be documented in the corresponding files under `docs/data/` and `configs/data/`.
 
@@ -105,11 +102,11 @@ All datasets, transformations, and preprocessing decisions should be documented 
 
 This repository is intended for research use and follows a reproducibility-oriented design. Core principles include:
 
-* out-of-sample evaluation only for primary claims,
-* walk-forward or expanding-window validation,
-* explicit control of randomness and experiment settings,
-* separation of exploratory analysis from validated results,
-* documentation of assumptions, limitations, and methodological risks.
+- out-of-sample evaluation only for primary claims,
+- walk-forward or expanding-window validation,
+- explicit control of randomness and experiment settings,
+- separation of exploratory analysis from validated results,
+- documentation of assumptions, limitations, and methodological risks.
 
 Claims about market efficiency should be interpreted cautiously and only in relation to the exact data, features, forecast horizon, validation scheme, and benchmark set used in each experiment.
 
@@ -127,13 +124,13 @@ Figures, tables, attribution analyses, and experiment logs are available in the 
 
 Project documentation is organized under `docs/` and is expected to cover:
 
-* theoretical foundations of the Efficient Market Hypothesis,
-* diffusion models for time-series forecasting,
-* explainable AI methodology,
-* data provenance and preprocessing,
-* experimental design and evaluation protocol,
-* reproducibility and audit notes,
-* limitations and threats to validity.
+- theoretical foundations of the Efficient Market Hypothesis,
+- diffusion models for time-series forecasting,
+- explainable AI methodology,
+- data provenance and preprocessing,
+- experimental design and evaluation protocol,
+- reproducibility and audit notes,
+- limitations and threats to validity.
 
 ## Manuscript Workflow
 
@@ -143,11 +140,11 @@ The `paper/` directory contains the manuscript scaffold and supporting assets fo
 
 To ensure reproducibility:
 
-* keep configurations version-controlled,
-* record random seeds and environment details,
-* avoid modifying processed data manually,
-* document failed and exploratory experiments,
-* verify results through independent reruns before reporting them.
+- keep configurations version-controlled,
+- record random seeds and environment details,
+- avoid modifying processed data manually,
+- document failed and exploratory experiments,
+- verify results through independent reruns before reporting them.
 
 ## Citation
 
@@ -165,6 +162,3 @@ If you use this repository in academic work, cite it as:
 ## License
 
 This project is released under the MIT License. See `LICENSE` for details.
-
-```
-
