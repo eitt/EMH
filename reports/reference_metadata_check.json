@@ -1,0 +1,192 @@
+[
+  {
+    "key": "fama1970",
+    "type": "article",
+    "title": "Efficient Capital Markets: A Review of Theory and Empirical Work",
+    "journal": "The Journal of Finance",
+    "doi": "10.2307/2325486",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "fama1991",
+    "type": "article",
+    "title": "Efficient Capital Markets: {II",
+    "journal": "The Journal of Finance",
+    "doi": "10.1111/j.1540-6261.1991.tb04636.x",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "lomackinlay1988",
+    "type": "article",
+    "title": "Stock Market Prices Do Not Follow Random Walks: Evidence from a Simple Specification Test",
+    "journal": "The Review of Financial Studies",
+    "doi": "10.1093/rfs/1.1.41",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "lo2004",
+    "type": "article",
+    "title": "The Adaptive Markets Hypothesis: Market Efficiency from an Evolutionary Perspective",
+    "journal": "The Journal of Portfolio Management",
+    "doi": "10.3905/jpm.2004.442611",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "urrutia1995",
+    "type": "article",
+    "title": "Tests of Random Walk and Market Efficiency for Latin American Emerging Equity Markets",
+    "journal": "Journal of Financial Research",
+    "doi": "10.1111/j.1475-6803.1995.tb00568.x",
+    "crossref_status": 200,
+    "abstract_available": true,
+    "abstract_snippet": "Abstract Variance‐ratio methodology is used to test the hypothesis that Latin American emerging equity market prices follow a random walk. The data are monthly index prices in local currency from December 1975 to March 1"
+  },
+  {
+    "key": "harvey1995",
+    "type": "article",
+    "title": "Predictable Risk and Returns in Emerging Markets",
+    "journal": "The Review of Financial Studies",
+    "doi": "10.1093/rfs/8.3.773",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "bekaertharvey1995",
+    "type": "article",
+    "title": "Time-Varying World Market Integration",
+    "journal": "The Journal of Finance",
+    "doi": "10.1111/j.1540-6261.1995.tb04790.x",
+    "crossref_status": 200,
+    "abstract_available": true,
+    "abstract_snippet": "ABSTRACT We propose a measure of capital market integration arising from a conditional regime‐switching model. Our measure allows us to describe expected returns in countries that are segmented from world capital markets"
+  },
+  {
+    "key": "cruzhernandez2024",
+    "type": "article",
+    "title": "Adaptive Market Hypothesis and Predictability: Evidence in Latin American Stock Indices",
+    "journal": "Latin American Research Review",
+    "doi": "10.1017/lar.2023.31",
+    "crossref_status": 200,
+    "abstract_available": true,
+    "abstract_snippet": "Abstract This article examines the adaptive market hypothesis in the five most important Latin American stock indices. To that end, we apply three versions of the variance ratio test, as well as the Brock-Dechert-Scheink"
+  },
+  {
+    "key": "welchgoyal2008",
+    "type": "article",
+    "title": "A Comprehensive Look at The Empirical Performance of Equity Premium Prediction",
+    "journal": "The Review of Financial Studies",
+    "doi": "10.1093/rfs/hhm014",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "campbellthompson2008",
+    "type": "article",
+    "title": "Predicting Excess Stock Returns Out of Sample: Can Anything Beat the Historical Average?",
+    "journal": "The Review of Financial Studies",
+    "doi": "10.1093/rfs/hhm055",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "rapach2010",
+    "type": "article",
+    "title": "Out-of-Sample Equity Premium Prediction: Combination Forecasts and Links to the Real Economy",
+    "journal": "The Review of Financial Studies",
+    "doi": "10.1093/rfs/hhp063",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "gu2020",
+    "type": "article",
+    "title": "Empirical Asset Pricing via Machine Learning",
+    "journal": "The Review of Financial Studies",
+    "doi": "10.1093/rfs/hhaa009",
+    "crossref_status": 200,
+    "abstract_available": true,
+    "abstract_snippet": "Abstract We perform a comparative analysis of machine learning methods for the canonical problem of empirical asset pricing: measuring asset risk premiums. We demonstrate large economic gains to investors using machine l"
+  },
+  {
+    "key": "amihud2002",
+    "type": "article",
+    "title": "Illiquidity and Stock Returns: Cross-Section and Time-Series Effects",
+    "journal": "Journal of Financial Markets",
+    "doi": "10.1016/S1386-4181(01)00024-6",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "dieboldmariano1995",
+    "type": "article",
+    "title": "Comparing Predictive Accuracy",
+    "journal": "Journal of Business \\& Economic Statistics",
+    "doi": "10.1080/07350015.1995.10524599",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "engle1982",
+    "type": "article",
+    "title": "Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation",
+    "journal": "Econometrica",
+    "doi": "10.2307/1912773",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "bollerslev1986",
+    "type": "article",
+    "title": "Generalized Autoregressive Conditional Heteroskedasticity",
+    "journal": "Journal of Econometrics",
+    "doi": "10.1016/0304-4076(86)90063-1",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "ho2020",
+    "type": "inproceedings",
+    "title": "Denoising Diffusion Probabilistic Models",
+    "journal": "Advances in Neural Information Processing Systems",
+    "doi": null,
+    "crossref_status": null,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "song2021",
+    "type": "inproceedings",
+    "title": "Score-Based Generative Modeling through Stochastic Differential Equations",
+    "journal": "International Conference on Learning Representations",
+    "doi": null,
+    "crossref_status": null,
+    "abstract_available": false,
+    "abstract_snippet": null
+  },
+  {
+    "key": "hansen2011",
+    "type": "article",
+    "title": "The Model Confidence Set",
+    "journal": "Econometrica",
+    "doi": "10.3982/ECTA5771",
+    "crossref_status": 200,
+    "abstract_available": false,
+    "abstract_snippet": null
+  }
+]

@@ -1,0 +1,69 @@
+\section{Econometric Strategy and Identification}
+
+\subsection{Object of Inference}
+The core estimand is benchmark-relative out-of-sample loss improvement versus random walk. For candidate model \(m\),
+\begin{equation}
+\Delta \mathcal{L}_{m} = \mathbb{E}\!\left[\ell\!\left(e_t^{\mathrm{rw}}\right)-\ell\!\left(e_t^{m}\right)\right],
+\end{equation}
+where \(\ell(\cdot)\) is forecast loss and \(e_t^{m}=y_t-\hat{y}_t^{m}\). Positive values indicate lower loss than random walk. The design identifies predictive association only.
+
+\subsection{Temporal Integrity and Leakage Controls}
+Leakage safeguards are imposed at preprocessing, sample construction, and validation stages.
+\begin{enumerate}
+  \item Processed feature indices are required to be time-sorted, unique, and aligned across returns, mask, and illiquidity inputs.
+  \item The illiquidity standardization uses strictly lagged rolling moments in code, so statistics at \(t\) are computed from data up to \(t-1\).
+  \item For each origin \(i\), context uses \([i-L,\ldots,i-1]\) and target uses \([i,\ldots,i+H-1]\).
+  \item Expanding-window evaluation inserts a horizon gap \(H-1\) between training and validation origins, and assertions fail if target windows overlap.
+\end{enumerate}
+
+\subsection{Validation Design}
+Instead of a single split, each \((L,H)\) configuration is evaluated on multiple expanding windows. Let \(w\in\{1,\ldots,W\}\) index windows. For each \(w\), models are fitted on a chronological training block and evaluated on a later validation block. Per-window losses are stored and aggregated, and \(W\) is reported with each summary metric.
+
+\subsection{Competing Forecast Models}
+All models forecast the same cumulative-return target from comparable lagged information sets:
+\begin{enumerate}
+  \item \textbf{Random walk} (\(\hat{y}_{i,t}^{(H)}=0\)).
+  \item \textbf{Historical mean} (mean lagged return in lookback window).
+  \item \textbf{Linear autoregressive baseline} (asset-wise linear AR on lagged returns).
+  \item \textbf{Ridge regression} on flattened context with time-aware inner validation for \(\alpha\).
+  \item \textbf{Shallow MLP baseline} with train-only scaling and early stopping.
+  \item \textbf{Random-forest baseline} (parsimonious tree depth and leaf-size controls).
+  \item \textbf{Conditional diffusion model}.
+\end{enumerate}
+
+For diffusion with schedule \(\{\beta_s\}_{s=1}^{S}\), define \(\alpha_s=1-\beta_s\), \(\bar{\alpha}_s=\prod_{u=1}^{s}\alpha_u\), and
+\begin{equation}
+y_s = \sqrt{\bar{\alpha}_s}\,y_0 + \sqrt{1-\bar{\alpha}_s}\,\epsilon, \quad \epsilon\sim\mathcal{N}(0,I).
+\end{equation}
+The denoiser \(\epsilon_{\theta}\) is trained by
+\begin{equation}
+\min_{\theta}\;\mathbb{E}_{y_0,\epsilon,s}\!\left[\left\|\epsilon-\epsilon_{\theta}(y_s,s,\mathcal{X}_t)\right\|_2^2\right].
+\label{eq:ddpm-loss}
+\end{equation}
+Training uses fixed conservative hyperparameters, seed control, and an inner time-ordered validation split with early stopping.
+
+\subsection{Loss Metrics and Comparative Inference}
+Point-forecast losses include RMSE and MAE:
+\begin{equation}
+\text{RMSE}=
+\sqrt{
+\frac{1}{TN}
+\sum_{t=1}^{T}\sum_{i=1}^{N}
+\left(y_{i,t}^{(H)}-\hat{y}_{i,t}^{(H)}\right)^2
+}, \quad
+\text{MAE}=
+\frac{1}{TN}\sum_{t=1}^{T}\sum_{i=1}^{N}
+\left|y_{i,t}^{(H)}-\hat{y}_{i,t}^{(H)}\right|.
+\end{equation}
+Directional accuracy is reported as a complementary diagnostic.
+
+Forecast comparison uses Diebold--Mariano tests \parencite{dieboldmariano1995} with
+\begin{equation}
+d_t=\ell(e_t^{\mathrm{rw}})-\ell(e_t^{m}), \qquad
+\text{DM}=\frac{\bar{d}}{\sqrt{\widehat{v}_d/T}}.
+\label{eq:dm}
+\end{equation}
+Under this sign convention, negative DM indicates higher loss for the candidate model than random walk.
+
+\subsection{Robustness and Sensitivity Design}
+Robustness dimensions include horizon (\(H\)), lookback (\(L\)), window-to-window stability, diffusion seed sensitivity, and feature-set ablations (\texttt{full}, \texttt{no\_illiquidity}, \texttt{returns\_only}). XAI analysis is framed as model reliance and explanation stability, not causality.

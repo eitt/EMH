@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unified entrypoint for the EMH research pipeline."""
+"""Unified entrypoint for EMH robust research + manuscript pipeline."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path.cwd().resolve()
 
 
 def run_step(label: str, cmd: list[str], env_extra: dict[str, str] | None = None) -> None:
@@ -26,33 +26,25 @@ def run_step(label: str, cmd: list[str], env_extra: dict[str, str] | None = None
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Run project pipeline in a single command."
-    )
-    parser.add_argument(
-        "--ingest",
-        action="store_true",
-        help="Download fresh raw data before preprocessing.",
-    )
-    parser.add_argument(
-        "--skip-train",
-        action="store_true",
-        help="Skip diffusion model training.",
-    )
+    parser = argparse.ArgumentParser(description="Run project pipeline in a single command.")
+    parser.add_argument("--ingest", action="store_true", help="Download fresh raw data before preprocessing.")
+    parser.add_argument("--skip-train", action="store_true", help="Skip standalone diffusion trainer.")
     parser.add_argument(
         "--skip-experiments",
         action="store_true",
-        help="Skip benchmark/diffusion experiment loop.",
+        help="Skip robust benchmark + diffusion experiment loop.",
+    )
+    parser.add_argument("--skip-plots", action="store_true", help="Skip report figure generation.")
+    parser.add_argument("--skip-xai", action="store_true", help="Skip explainability step.")
+    parser.add_argument(
+        "--skip-manuscript-assets",
+        action="store_true",
+        help="Skip LaTeX asset export (tables/generated, figures/generated).",
     )
     parser.add_argument(
-        "--skip-plots",
+        "--skip-working-paper",
         action="store_true",
-        help="Skip report figure generation.",
-    )
-    parser.add_argument(
-        "--skip-xai",
-        action="store_true",
-        help="Skip integrated-gradients explainability step.",
+        help="Skip Overleaf-ready working-paper bundle generation.",
     )
     return parser.parse_args()
 
@@ -70,7 +62,7 @@ def main() -> int:
         run_step("Train diffusion model", [python, "src/models/trainer.py"])
 
     if not args.skip_experiments:
-        run_step("Run experiment loop", [python, "src/experiments/run_loop.py"])
+        run_step("Run robust experiment loop", [python, "src/experiments/run_loop.py"])
 
     if not args.skip_plots:
         run_step(
@@ -85,6 +77,12 @@ def main() -> int:
             [python, "src/xai/explain.py"],
             env_extra={"MPLBACKEND": "Agg"},
         )
+
+    if not args.skip_manuscript_assets:
+        run_step("Build manuscript assets", [python, "scripts/build_manuscript_assets.py"])
+
+    if not args.skip_working_paper:
+        run_step("Build working-paper bundle", [python, "scripts/build_working_paper.py"])
 
     print("[run_pipeline] complete")
     return 0

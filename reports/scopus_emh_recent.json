@@ -1,0 +1,19 @@
+{
+  "query": "(TITLE-ABS-KEY(\"weak-form market efficiency emerging markets out-of-sample forecasting\")) AND PUBYEAR > 2019",
+  "sort": "-coverDate",
+  "from_year": 2020,
+  "total_hits": 0,
+  "returned": 1,
+  "records": [
+    {
+      "title": null,
+      "doi": null,
+      "year": null,
+      "cover_date": null,
+      "source": null,
+      "cited_by": 0,
+      "eid": null,
+      "url": null
+    }
+  ]
+}

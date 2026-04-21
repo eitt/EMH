@@ -1,0 +1,12 @@
+\section{Supplementary Diagnostics and Reproducibility Notes}
+
+The robust experiment loop writes diagnostics and evaluation outputs to \path{reports/tables/}, including:
+\begin{enumerate}
+  \item \path{per_window_losses.csv} (window-level RMSE, MAE, directional accuracy);
+  \item \path{leakage_checks.csv} (horizon-overlap assertions);
+  \item \path{diffusion_training_stability.csv} (best-epoch and validation-loss summaries);
+  \item \path{diffusion_seed_sensitivity.csv} and \path{diffusion_ablation.csv};
+  \item \path{xai_seed_sensitivity.csv} and \path{xai_stability.csv}.
+\end{enumerate}
+
+Manuscript asset generation is scripted via \path{scripts/build_manuscript_assets.py}, which converts report CSV files into \path{tables/generated/*.tex} and copies standardized figures to \path{figures/generated/}. Overleaf package export is automated by \path{scripts/build_working_paper.py}.

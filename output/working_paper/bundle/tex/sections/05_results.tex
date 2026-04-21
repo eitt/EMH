@@ -1,0 +1,76 @@
+\section{Empirical Results}
+
+\subsection{Descriptive Properties}
+\input{../tables/generated/tab_summary_statistics.tex}
+\input{../tables/generated/tab_diagnostics.tex}
+\input{../tables/generated/tab_return_correlations.tex}
+
+\Cref{tab:summary-statistics} shows near-zero unconditional mean returns with heavy tails. \Cref{tab:diagnostics} confirms stationary returns, mostly non-stationary price levels, and strong serial dependence in squared returns. \Cref{tab:return-correlations} indicates moderate cross-market comovement (off-diagonal correlations approximately 0.57--0.66), consistent with regional integration without near-collinearity.
+
+\subsection{Baseline Benchmark Performance}
+\input{../tables/generated/tab_rmse_by_config.tex}
+\input{../tables/generated/tab_model_performance_summary.tex}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.96\linewidth]{../figures/generated/fig_rmse_by_model.png}
+  \caption{Per-window RMSE distribution by model and configuration.}
+  \label{fig:rmse}
+\end{figure}
+
+Random walk is the lowest-RMSE benchmark in all six \((L,H)\) configurations (\Cref{tab:rmse-by-config,tab:model-performance-summary,fig:rmse}). At \(H=1\), random-forest and linear-AR baselines are close to random walk in level terms but do not dominate consistently across lookback settings. At \(H=5\), historical mean and AR-linear models are again close to random walk, while more flexible ML models (MLP) degrade materially.
+
+\subsection{Diffusion Model Performance}
+Diffusion forecasts are substantially worse than benchmark models in this implementation. Average RMSE for diffusion is approximately 0.47--0.64 across configurations, versus approximately 0.02 for \(H=1\) random-walk benchmarks and approximately 0.046 for \(H=5\) random-walk benchmarks (\Cref{tab:rmse-by-config}).
+
+\subsection{Formal Comparative Inference}
+\input{../tables/generated/tab_dm_summary.tex}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.86\linewidth]{../figures/generated/fig_dm_pvalue_heatmap.png}
+  \caption{Diebold--Mariano p-values versus random walk.}
+  \label{fig:dm-pvalue}
+\end{figure}
+
+\Cref{tab:dm-summary,fig:dm-pvalue} confirms that diffusion is significantly worse than random walk in all six configurations under DM tests. Some baseline models are statistically indistinguishable from random walk at \(H=5\), while ridge and MLP are typically inferior.
+
+\subsection{XAI Findings}
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../figures/generated/fig_xai_importance_heatmap.png}
+    \caption{Average permutation importance}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../figures/generated/fig_xai_top_features.png}
+    \caption{Top feature channels}
+  \end{subfigure}
+  \caption{Diffusion model-reliance diagnostics from seed-level permutation analysis.}
+  \label{fig:xai}
+\end{figure}
+
+\input{../tables/generated/tab_xai_seed_sensitivity.tex}
+\input{../tables/generated/tab_xai_stability.tex}
+
+XAI outputs are interpreted as model reliance only. \Cref{tab:xai-seed-sensitivity} shows no seed with max-\(z\) above 2.5, and \Cref{tab:xai-stability} shows unstable rank correlation across some seed pairs. Therefore, explanations are treated as fragile and non-structural.
+
+\subsection{Robustness Checks and Sensitivity}
+\input{../tables/generated/tab_robustness_summary.tex}
+\input{../tables/generated/tab_diffusion_ablation.tex}
+\input{../tables/generated/tab_diffusion_seed_sensitivity.tex}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.84\linewidth]{../figures/generated/fig_diffusion_seed_sensitivity.png}
+  \caption{Diffusion sensitivity across seeds, horizons, and feature sets.}
+  \label{fig:diffusion-seed}
+\end{figure}
+
+Leakage assertions pass for all evaluation windows (\Cref{tab:robustness-summary}). Diffusion ablations in \Cref{tab:diffusion-ablation,tab:diffusion-seed-sensitivity,fig:diffusion-seed} indicate meaningful sensitivity to feature design and seed choice, with no robust improvement over benchmark models.
+
+\subsection{EMH Interpretation}
+Under a benchmark-relative predictability interpretation of weak-form EMH, the present evidence is consistent with limited extractable out-of-sample predictive gains beyond simple benchmarks in this dataset and design. This is a predictive, not structural, statement: the analysis does not establish exploitable abnormal profits, causal inefficiency mechanisms, or post-cost economic significance.

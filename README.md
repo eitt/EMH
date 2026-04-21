@@ -29,7 +29,7 @@ The repository includes the following components:
 - Explainable AI analysis using attribution methods for sequential data
 - Statistical testing for model comparison
 - Interactive web interface for exploring forecasts and results
-- Quarto-based manuscript workflow for paper preparation
+- LaTeX manuscript workflow with generated table/figure assets for Overleaf
 
 ## Repository Structure
 
@@ -39,9 +39,12 @@ The repository includes the following components:
 |- archive/        # Archived legacy notebook artifacts
 |- data/           # Raw and processed datasets
 |- docs/           # Documentation, theory, and audit notes
+|- figures/        # Manuscript-ready figures (generated + static)
 |- paper/          # Manuscript and bibliography
 |- reports/        # Generated figures, tables, and logs
 |- scripts/        # Orchestration + literature tooling
+|- tables/         # Manuscript-ready LaTeX tables (generated + static)
+|- tex/            # Primary LaTeX manuscript (main.tex + sections)
 `- src/            # Core research code (data/model/eval/xai)
 ````
 
@@ -67,6 +70,20 @@ Options:
 python scripts/run_pipeline.py --ingest
 python scripts/run_pipeline.py --skip-xai
 python scripts/run_pipeline.py --skip-train --skip-experiments
+python scripts/run_pipeline.py --skip-manuscript-assets
+python scripts/run_pipeline.py --skip-working-paper
+```
+
+Build manuscript assets only:
+
+```bash
+python scripts/build_manuscript_assets.py
+```
+
+Build Overleaf-ready working-paper bundle only:
+
+```bash
+python scripts/build_working_paper.py
 ```
 
 ### Step-by-step (manual)
@@ -113,9 +130,9 @@ Claims about market efficiency should be interpreted cautiously and only in rela
 
 Baseline experiments are stored under `reports/` and should be interpreted as study-specific empirical findings rather than general conclusions about market efficiency.
 
-A representative summary sentence may be stated as follows:
+A representative summary sentence from the robust implementation is:
 
-> Under the current experimental specification, the baseline results suggest evidence of out-of-sample predictive structure in some market-period settings. These findings require verification through robustness checks, benchmark comparisons, and sensitivity analysis before being interpreted in relation to weak-form efficiency.
+> Under expanding-window benchmark-first evaluation, random walk remains best by RMSE across tested \((L,H)\) configurations, while diffusion underperforms simple baselines; this is disciplined negative-result evidence for weak-form predictability tests in this setup.
 
 Figures, tables, attribution analyses, and experiment logs are available in the `reports/` directory.
 
@@ -133,7 +150,12 @@ Project documentation is organized under `docs/` and is expected to cover:
 
 ## Manuscript Workflow
 
-The `paper/` directory contains the manuscript scaffold and supporting assets for academic writing. The repository is structured so that experimental outputs can be incorporated into publication-ready tables and figures with minimal manual intervention.
+Primary manuscript entrypoint is `tex/main.tex`. Experimental outputs are transformed into stable manuscript assets by `scripts/build_manuscript_assets.py`, which writes:
+
+- `tables/generated/*.tex`
+- `figures/generated/*`
+
+See `asset_pipeline.md` for the full Overleaf-oriented workflow.
 
 ## Reproducibility
 

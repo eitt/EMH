@@ -31,7 +31,7 @@ def home_page():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("EMH Status", "Rejected", delta="-3.18 Z-Score")
+        st.metric("EMH Inference", "Benchmark-relative", delta="No causal claim")
     with col2:
         st.metric("Model Family", "Diffusion", "Denoising Score Matching")
     with col3:
@@ -42,7 +42,8 @@ def home_page():
     st.info(
         "Weak-form efficiency implies that future prices cannot be predicted from past "
         "price patterns. Our diffusion model attempts to denoise future returns using "
-        "historical context; a significant signal indicates potential inefficiency."
+        "historical context; benchmark-relative forecast gains are interpreted as limited "
+        "predictive evidence only, not direct proof of tradable inefficiency."
     )
 
 

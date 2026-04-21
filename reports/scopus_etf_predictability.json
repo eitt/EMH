@@ -1,0 +1,19 @@
+{
+  "query": "(TITLE-ABS-KEY((ETF OR exchange-traded fund) AND (emerging markets OR Latin America) AND (return predictability OR market efficiency))) AND PUBYEAR > 2009",
+  "sort": "-coverDate",
+  "from_year": 2010,
+  "total_hits": 1,
+  "returned": 1,
+  "records": [
+    {
+      "title": "Impact of foreign and domestic ETFs on the volatility and pricing-efficiency of constituents during turbulent and tranquil times: Indian evidence",
+      "doi": "10.1108/IJOEM-03-2021-0311",
+      "year": 2023,
+      "cover_date": "2023-12-05",
+      "source": "International Journal of Emerging Markets",
+      "cited_by": 2,
+      "eid": "2-s2.0-85126328943",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85126328943"
+    }
+  ]
+}

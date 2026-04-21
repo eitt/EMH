@@ -1,0 +1,259 @@
+{
+  "query": "(TITLE-ABS-KEY(Latin AND America AND market AND efficiency AND stock)) AND PUBYEAR > 1999",
+  "sort": "-coverDate",
+  "from_year": 2000,
+  "total_hits": 33,
+  "returned": 25,
+  "records": [
+    {
+      "title": "Return reversal of Latin American industries",
+      "doi": "10.1108/JEFAS-05-2025-0165",
+      "year": 2026,
+      "cover_date": "2026-01-01",
+      "source": "Journal of Economics Finance and Administrative Science",
+      "cited_by": 0,
+      "eid": "2-s2.0-105028431262",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/105028431262"
+    },
+    {
+      "title": "Intellectual Capital and Performance of Banking and Financial Institutions in Panama: An Application of the VAIC\u2122 Model",
+      "doi": "10.3390/jrfm17090416",
+      "year": 2024,
+      "cover_date": "2024-09-01",
+      "source": "Journal of Risk and Financial Management",
+      "cited_by": 3,
+      "eid": "2-s2.0-85205060838",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85205060838"
+    },
+    {
+      "title": "Choice between Sustainable versus Conventional Investments\u2014Relative Efficiency Analysis from Global and Regional Stock Markets",
+      "doi": "10.3390/su16135340",
+      "year": 2024,
+      "cover_date": "2024-07-01",
+      "source": "Sustainability Switzerland",
+      "cited_by": 2,
+      "eid": "2-s2.0-85198327474",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85198327474"
+    },
+    {
+      "title": "Adaptive Market Hypothesis and Predictability: Evidence in Latin American Stock Indices",
+      "doi": "10.1017/lar.2023.31",
+      "year": 2024,
+      "cover_date": "2024-01-01",
+      "source": "Latin American Research Review",
+      "cited_by": 4,
+      "eid": "2-s2.0-85170073721",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85170073721"
+    },
+    {
+      "title": "Reporting quality, stock market integration, and investment efficiency in Latin America",
+      "doi": "10.1016/j.bir.2023.01.012",
+      "year": 2023,
+      "cover_date": "2023-07-01",
+      "source": "Borsa Istanbul Review",
+      "cited_by": 6,
+      "eid": "2-s2.0-85149700967",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85149700967"
+    },
+    {
+      "title": "Measuring the performance of retailers during the COVID-19 pandemic: Embedding optimal control theory principles in a dynamic data envelopment analysis approach",
+      "doi": "10.1016/j.orp.2023.100282",
+      "year": 2023,
+      "cover_date": "2023-01-01",
+      "source": "Operations Research Perspectives",
+      "cited_by": 2,
+      "eid": "2-s2.0-85163466648",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85163466648"
+    },
+    {
+      "title": "Comparative Analysis of Efficiency in the Economic Sectors of Lima Stock Exchange",
+      "doi": "10.1145/3523132.3523139",
+      "year": 2022,
+      "cover_date": "2022-01-12",
+      "source": "ACM International Conference Proceeding Series",
+      "cited_by": 0,
+      "eid": "2-s2.0-85129794228",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85129794228"
+    },
+    {
+      "title": "CHANGES IN PATTERNS OF TERRITORIAL DISTRIBUTION OF FOREIGN DIRECT INVESTMENT IN LATIN AMERICAN AND CARIBBEAN REGION",
+      "doi": "10.48128/pisg/2021-66.4-09",
+      "year": 2021,
+      "cover_date": "2021-01-01",
+      "source": "Prace I Studia Geograficzne",
+      "cited_by": 0,
+      "eid": "2-s2.0-85131863057",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85131863057"
+    },
+    {
+      "title": "Testing the efficient market hypothesis in Latin American stock markets",
+      "doi": "10.1016/j.physa.2019.123082",
+      "year": 2020,
+      "cover_date": "2020-02-15",
+      "source": "Physica A Statistical Mechanics and Its Applications",
+      "cited_by": 43,
+      "eid": "2-s2.0-85075355493",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85075355493"
+    },
+    {
+      "title": "The \u201cday-of-the-week\u201d effects in the exchange rate of Latin American currencies",
+      "doi": "10.21919/remef.v14i0.419",
+      "year": 2019,
+      "cover_date": "2019-08-01",
+      "source": "Revista Mexicana De Economia Y Finanzas Nueva Epoca",
+      "cited_by": 4,
+      "eid": "2-s2.0-105017275081",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/105017275081"
+    },
+    {
+      "title": "Stock pricing in Latin America: The synchronicity effect",
+      "doi": "10.1016/j.ememar.2019.03.002",
+      "year": 2019,
+      "cover_date": "2019-06-01",
+      "source": "Emerging Markets Review",
+      "cited_by": 5,
+      "eid": "2-s2.0-85062882494",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85062882494"
+    },
+    {
+      "title": "Energy and machines. Energy capital ratios in Europe and Latin America. 1875\u20131970",
+      "doi": "10.1080/03585522.2018.1503968",
+      "year": 2019,
+      "cover_date": "2019-01-02",
+      "source": "Scandinavian Economic History Review",
+      "cited_by": 3,
+      "eid": "2-s2.0-85053041584",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85053041584"
+    },
+    {
+      "title": "LATAM airlines group: From the end of the earth to no. 10 in the world",
+      "doi": "10.1007/978-3-319-76306-4_11",
+      "year": 2018,
+      "cover_date": "2018-05-30",
+      "source": "Business Despite Borders Companies in the Age of Populist Anti Globalization",
+      "cited_by": 0,
+      "eid": "2-s2.0-85053312896",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85053312896"
+    },
+    {
+      "title": "A comparative performance review of the Venezuelan, Latin-American and emerging markets stock indexes with the North-American ones using a Gaussian two-regime Markov-switching model",
+      "doi": null,
+      "year": 2018,
+      "cover_date": "2018-01-01",
+      "source": "Espacios",
+      "cited_by": 3,
+      "eid": "2-s2.0-85055635235",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85055635235"
+    },
+    {
+      "title": "The implicit impact of cross-listing on stock prices: A market microstructure perspective - The case of Latin American markets",
+      "doi": "10.1016/j.cya.2015.11.005",
+      "year": 2016,
+      "cover_date": "2016-04-01",
+      "source": "Contaduria Y Administracion",
+      "cited_by": 3,
+      "eid": "2-s2.0-84957673840",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84957673840"
+    },
+    {
+      "title": "The Relative Predictability of Stock Markets in the Americas",
+      "doi": "10.1002/ijfe.1536",
+      "year": 2016,
+      "cover_date": "2016-04-01",
+      "source": "International Journal of Finance and Economics",
+      "cited_by": 1,
+      "eid": "2-s2.0-84949293817",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84949293817"
+    },
+    {
+      "title": "Market liberalizations and efficiency in Latin America",
+      "doi": "10.1108/SEF-01-2015-0014",
+      "year": 2016,
+      "cover_date": "2016-01-01",
+      "source": "Studies in Economics and Finance",
+      "cited_by": 5,
+      "eid": "2-s2.0-84990866335",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84990866335"
+    },
+    {
+      "title": "Data envelopment analysis approach and its application in the telecommunication sector in South America",
+      "doi": null,
+      "year": 2015,
+      "cover_date": "2015-01-01",
+      "source": "Proceedings of the 26th International Business Information Management Association Conference Innovation Management and Sustainable Economic Competitive Advantage from Regional Development to Global Growth Ibima 2015",
+      "cited_by": 0,
+      "eid": "2-s2.0-84976444286",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84976444286"
+    },
+    {
+      "title": "Herding in the mutual fund industry: evidence from Chile",
+      "doi": "10.1108/ARLA-09-2013-0137",
+      "year": 2014,
+      "cover_date": "2014-05-27",
+      "source": "Academia Revista Latinoamericana De Administracion",
+      "cited_by": 7,
+      "eid": "2-s2.0-85006282727",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85006282727"
+    },
+    {
+      "title": "The ingenious marketing of modern paintings",
+      "doi": "10.1108/JHRM-04-2013-0023",
+      "year": 2014,
+      "cover_date": "2014-01-01",
+      "source": "Journal of Historical Research in Marketing",
+      "cited_by": 2,
+      "eid": "2-s2.0-84939607513",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84939607513"
+    },
+    {
+      "title": "Measuring capital market efficiency: Long-term memory, fractal dimension and approximate entropy",
+      "doi": "10.1140/epjb/e2014-50113-6",
+      "year": 2014,
+      "cover_date": "2014-01-01",
+      "source": "European Physical Journal B",
+      "cited_by": 75,
+      "eid": "2-s2.0-84927753900",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84927753900"
+    },
+    {
+      "title": "Net interest margins and firm performance in developing countries: Evidence from Argentine commercial banks",
+      "doi": "10.1108/MRR-05-2012-0100",
+      "year": 2013,
+      "cover_date": "2013-06-01",
+      "source": "Management Research Review",
+      "cited_by": 27,
+      "eid": "2-s2.0-84879975305",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84879975305"
+    },
+    {
+      "title": "Limits to Arbitrage and Value Investing: Evidence From Brazil",
+      "doi": "10.1080/10978526.2013.808943",
+      "year": 2013,
+      "cover_date": "2013-04-01",
+      "source": "Latin American Business Review",
+      "cited_by": 9,
+      "eid": "2-s2.0-84880005996",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84880005996"
+    },
+    {
+      "title": "Early warning models against bankruptcy risk for Central European and Latin American enterprises",
+      "doi": "10.1016/j.econmod.2012.11.017",
+      "year": 2013,
+      "cover_date": "2013-03-01",
+      "source": "Economic Modelling",
+      "cited_by": 86,
+      "eid": "2-s2.0-84871742115",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84871742115"
+    },
+    {
+      "title": "Measuring capital market efficiency: Global and local correlations structure",
+      "doi": "10.1016/j.physa.2012.08.003",
+      "year": 2013,
+      "cover_date": "2013-01-01",
+      "source": "Physica A Statistical Mechanics and Its Applications",
+      "cited_by": 146,
+      "eid": "2-s2.0-84867331010",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84867331010"
+    }
+  ]
+}

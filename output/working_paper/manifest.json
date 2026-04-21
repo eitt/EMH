@@ -1,0 +1,17 @@
+{
+  "generated_utc": "2026-04-21T21:20:23.705965+00:00",
+  "article_style_checks": [
+    "ok",
+    "ok",
+    "ok"
+  ],
+  "theory_citation_checks": [
+    "ok:fama1970",
+    "ok:fama1991"
+  ],
+  "entrypoint": "tex/main.tex",
+  "notes": [
+    "Bundle is Overleaf-ready with relative paths.",
+    "Run pdflatex/bibtex on tex/main.tex after upload."
+  ]
+}

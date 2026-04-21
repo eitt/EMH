@@ -1,0 +1,14 @@
+{
+  "start_date": "2015-01-02",
+  "end_date": "2023-12-29",
+  "n_obs": 2264,
+  "n_assets": 4,
+  "assets": [
+    "ECH",
+    "EWW",
+    "EWZ",
+    "GXG"
+  ],
+  "amihud_standardization_window": 60,
+  "amihud_standardization_strictly_lagged": true
+}

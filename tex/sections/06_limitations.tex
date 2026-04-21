@@ -1,0 +1,11 @@
+\section{Limitations and Remaining Robustness Boundaries}
+
+The revised pipeline materially improves temporal integrity, benchmark breadth, and window-level evaluation; however, several boundaries remain.
+\begin{enumerate}
+  \item \textbf{Economic significance is not tested}: no transaction-cost-adjusted trading strategy is implemented, so forecast comparisons should not be interpreted as profitability evidence.
+  \item \textbf{Model class coverage remains incomplete}: ARIMA/ARIMAX, GARCH-family, and VAR/VECM benchmarks are not yet included in the production loop.
+  \item \textbf{Hyperparameter search is conservative}: diffusion and MLP settings use leakage-safe but limited tuning; nested time-series hyperparameter selection is not yet implemented.
+  \item \textbf{Distributional validation is limited}: the current analysis emphasizes point-loss metrics; calibration-focused scoring and distributional diagnostics remain future work.
+  \item \textbf{Inference depth}: DM comparisons are reported, but Model Confidence Set procedures \parencite{hansen2011} are not yet integrated.
+  \item \textbf{Data scope}: conclusions are specific to four ETF proxies and the 2015--2023 sample, and may not generalize to other assets, frequencies, or post-2023 regimes.
+\end{enumerate}

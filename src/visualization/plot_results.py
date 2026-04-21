@@ -1,71 +1,117 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+from __future__ import annotations
+
 import os
 
-# Set publication quality aesthetics
-sns.set_theme(style="whitegrid", context="paper", font_scale=1.2)
-# Muted, colorblind-friendly colors (blue, orange, green, red)
-COLORS = sns.color_palette("colorblind", 4)
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
-def load_results(path='reports/tables/experiment_results.csv'):
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Missing {path}")
-    return pd.read_csv(path)
+sns.set_theme(style="whitegrid", context="paper", font_scale=1.1)
 
-def plot_rmse_bar(df):
-    plt.figure(figsize=(10, 6))
-    
-    # We create a composite hue to group by L and Model
-    # Simple bar plot across H
-    g = sns.catplot(
-        data=df, kind="bar",
-        x="H", y="RMSE", hue="Model", col="L",
-        palette=COLORS, height=5, aspect=0.8,
-        errorbar=None # Since we only have one run per config in the loop right now
+
+def _ensure_dir(path: str) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+
+def load_results(
+    experiment_path: str = "reports/tables/experiment_results.csv",
+    per_window_path: str = "reports/tables/per_window_losses.csv",
+    dm_path: str = "reports/tables/dm_tests.csv",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    if not os.path.exists(experiment_path):
+        raise FileNotFoundError(f"Missing {experiment_path}")
+    exp = pd.read_csv(experiment_path)
+    per_window = pd.read_csv(per_window_path) if os.path.exists(per_window_path) else pd.DataFrame()
+    dm = pd.read_csv(dm_path) if os.path.exists(dm_path) else pd.DataFrame()
+    return exp, per_window, dm
+
+
+def plot_rmse_box(per_window: pd.DataFrame, experiment: pd.DataFrame) -> None:
+    out_path = "reports/figures/rmse_comparison.png"
+    _ensure_dir(out_path)
+
+    if per_window.empty:
+        pivot = experiment.pivot_table(index=["L", "H"], columns="Model", values="RMSE")
+        fig, ax = plt.subplots(figsize=(11, 6))
+        pivot.plot(kind="bar", ax=ax)
+        ax.set_ylabel("RMSE")
+        ax.set_title("Average RMSE by configuration")
+        plt.tight_layout()
+        plt.savefig(out_path, dpi=300)
+        plt.close()
+        return
+
+    df = per_window.copy()
+    df["Config"] = df.apply(lambda r: f"L={int(r['L'])}, H={int(r['H'])}", axis=1)
+    order = sorted(df["Config"].unique(), key=lambda s: (int(s.split(",")[0].split("=")[1]), int(s.split("=")[2])))
+    fig, ax = plt.subplots(figsize=(12, 6))
+    sns.boxplot(data=df, x="Config", y="RMSE", hue="model", ax=ax)
+    ax.set_xlabel("Configuration")
+    ax.set_ylabel("RMSE")
+    ax.set_title("Per-window RMSE distribution by model")
+    ax.tick_params(axis="x", rotation=30)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels, title="Model", bbox_to_anchor=(1.02, 1), loc="upper left")
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=300)
+    plt.close()
+
+
+def plot_pvalue_heatmap(dm: pd.DataFrame) -> None:
+    out_path = "reports/figures/pvalue_heatmap.png"
+    _ensure_dir(out_path)
+
+    if dm.empty:
+        return
+    df = dm.copy()
+    df = df[df["Model"] != "Random Walk"]
+    df["Config"] = df.apply(lambda r: f"L={int(r['L'])}, H={int(r['H'])}", axis=1)
+    pivot = df.pivot(index="Config", columns="Model", values="P_Value")
+    fig, ax = plt.subplots(figsize=(9, 5))
+    sns.heatmap(
+        pivot,
+        annot=True,
+        fmt=".3f",
+        cmap=sns.diverging_palette(10, 240, as_cmap=True),
+        vmin=0.0,
+        vmax=1.0,
+        cbar_kws={"label": "DM p-value vs Random Walk"},
+        ax=ax,
     )
-    
-    g.set_axis_labels("Forecast Horizon (H)", "RMSE (Log Returns)")
-    g.set_titles("Lookback Window (L) = {col_name}")
-    g.despine(left=True)
-    
-    out_path = 'reports/figures/rmse_comparison.png'
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    plt.savefig(out_path, dpi=300, bbox_inches='tight')
+    ax.set_title("Diebold-Mariano p-values (lower is stronger evidence against equal loss)")
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=300)
     plt.close()
-    
-def plot_pvalue_heatmap(df):
-    """Plots a heatmap of DM Test p-values vs Random Walk"""
-    plt.figure(figsize=(8, 6))
-    
-    # Filter out Random Walk since it's the baseline (p=1.0)
-    df_compare = df[df['Model'] != 'Random Walk'].copy()
-    
-    # Create pivot for heatmap (L, H) vs Model P-Value
-    # We will combine L and H for the Y axis
-    df_compare['Config'] = df_compare.apply(lambda r: f"L={r['L']}, H={r['H']}", axis=1)
-    
-    pivot = df_compare.pivot(index='Config', columns='Model', values='P_Value')
-    
-    # We want to highlight significance < 0.05
-    # Use a diverging colormap where low is red (significant), high is white/blue
-    cmap = sns.diverging_palette(10, 240, as_cmap=True)
-    
-    ax = sns.heatmap(pivot, annot=True, cmap=cmap, vmin=0.0, vmax=1.0, 
-                     cbar_kws={'label': 'Diebold-Mariano p-value\n(vs Random Walk)'})
-    
-    ax.set_title("Statistical Significance of Forecast Improvements\n(p < 0.05 indicates model beats Random Walk)")
-    
-    out_path = 'reports/figures/pvalue_heatmap.png'
-    plt.savefig(out_path, dpi=300, bbox_inches='tight')
+
+
+def plot_seed_sensitivity() -> None:
+    in_path = "reports/tables/diffusion_seed_sensitivity.csv"
+    out_path = "reports/figures/diffusion_seed_sensitivity.png"
+    if not os.path.exists(in_path):
+        return
+    _ensure_dir(out_path)
+    df = pd.read_csv(in_path)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    sns.lineplot(
+        data=df,
+        x="seed",
+        y="rmse_mean",
+        hue="feature_set",
+        style="H",
+        markers=True,
+        dashes=False,
+        ax=ax,
+    )
+    ax.set_title("Diffusion RMSE sensitivity across seeds, horizons, and feature sets")
+    ax.set_ylabel("Mean RMSE")
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=300)
     plt.close()
+
 
 if __name__ == "__main__":
-    try:
-        df = load_results()
-        plot_rmse_bar(df)
-        plot_pvalue_heatmap(df)
-        print("Generated scientific visualizations in reports/figures/")
-    except Exception as e:
-        print(f"Error generating plots: {e}")
+    exp, per_window, dm = load_results()
+    plot_rmse_box(per_window, exp)
+    plot_pvalue_heatmap(dm)
+    plot_seed_sensitivity()
+    print("Generated scientific visualizations in reports/figures/")

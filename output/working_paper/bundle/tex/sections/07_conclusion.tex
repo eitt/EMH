@@ -1,0 +1,7 @@
+\section{Conclusion}
+
+This paper evaluates weak-form EMH through benchmark-relative forecast testing, not structural market-efficiency identification. Under expanding-window evaluation, leakage controls, multiple loss metrics, and a stronger benchmark family, random walk remains the best-performing model by RMSE across all tested \((L,H)\) settings.
+
+Conditional diffusion does not provide incremental predictive gains in this implementation and is significantly worse than random walk in all Diebold--Mariano comparisons. Diffusion ablation and seed analyses also indicate sensitivity rather than stable superiority. XAI outputs, interpreted as model reliance diagnostics, are not stable enough to support strong economic narratives.
+
+The main contribution is therefore methodological: a transparent, reproducible, benchmark-disciplined pipeline for weak-form predictability testing in Latin American ETF proxies, including explicit robustness boundaries and interpretation discipline. Stronger claims would require broader benchmark classes, deeper hyperparameter validation, and an explicit post-cost economic significance layer.

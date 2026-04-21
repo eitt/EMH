@@ -1,0 +1,259 @@
+{
+  "query": "(TITLE-ABS-KEY((return OR equity) AND predictability AND out-of-sample AND (forecast OR forecasting))) AND PUBYEAR > 2009",
+  "sort": "-citedby-count",
+  "from_year": 2010,
+  "total_hits": 522,
+  "returned": 25,
+  "records": [
+    {
+      "title": "Forecasting the equity risk premium: The role of technical indicators",
+      "doi": "10.1287/mnsc.2013.1838",
+      "year": 2014,
+      "cover_date": "2014-01-01",
+      "source": "Management Science",
+      "cited_by": 760,
+      "eid": "2-s2.0-84897701069",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84897701069"
+    },
+    {
+      "title": "Good volatility, bad volatility: Signed jumps and the persistence of volatility",
+      "doi": "10.1162/REST_a_00503",
+      "year": 2015,
+      "cover_date": "2015-07-01",
+      "source": "Review of Economics and Statistics",
+      "cited_by": 551,
+      "eid": "2-s2.0-84937122670",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84937122670"
+    },
+    {
+      "title": "Forecasting stock returns",
+      "doi": "10.1016/B978-0-444-53683-9.00006-2",
+      "year": 2013,
+      "cover_date": "2013-01-01",
+      "source": "Handbook of Economic Forecasting",
+      "cited_by": 462,
+      "eid": "2-s2.0-84881562789",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84881562789"
+    },
+    {
+      "title": "Forecasting stock market returns: The sum of the parts is more than the whole",
+      "doi": "10.1016/j.jfineco.2011.02.003",
+      "year": 2011,
+      "cover_date": "2011-06-01",
+      "source": "Journal of Financial Economics",
+      "cited_by": 301,
+      "eid": "2-s2.0-79954595964",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/79954595964"
+    },
+    {
+      "title": "Market expectations in the cross-section of present values",
+      "doi": "10.1111/jofi.12060",
+      "year": 2013,
+      "cover_date": "2013-10-01",
+      "source": "Journal of Finance",
+      "cited_by": 294,
+      "eid": "2-s2.0-84883890389",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84883890389"
+    },
+    {
+      "title": "Forecasting crude oil prices with a large set of predictors: Can LASSO select powerful predictors?",
+      "doi": "10.1016/j.jempfin.2019.08.007",
+      "year": 2019,
+      "cover_date": "2019-12-01",
+      "source": "Journal of Empirical Finance",
+      "cited_by": 254,
+      "eid": "2-s2.0-85072178956",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85072178956"
+    },
+    {
+      "title": "Predicting stock returns in the presence of COVID-19 pandemic: The role of health news",
+      "doi": "10.1016/j.irfa.2020.101546",
+      "year": 2020,
+      "cover_date": "2020-10-01",
+      "source": "International Review of Financial Analysis",
+      "cited_by": 239,
+      "eid": "2-s2.0-85087760385",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85087760385"
+    },
+    {
+      "title": "Economic policy uncertainty in China and stock market expected returns",
+      "doi": "10.1111/acfi.12338",
+      "year": 2017,
+      "cover_date": "2017-12-01",
+      "source": "Accounting and Finance",
+      "cited_by": 202,
+      "eid": "2-s2.0-85044426352",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85044426352"
+    },
+    {
+      "title": "Stock return forecasting: Some new evidence",
+      "doi": "10.1016/j.irfa.2015.05.002",
+      "year": 2015,
+      "cover_date": "2015-01-01",
+      "source": "International Review of Financial Analysis",
+      "cited_by": 196,
+      "eid": "2-s2.0-84934757037",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84934757037"
+    },
+    {
+      "title": "Oil and the short-term predictability of stock return volatility",
+      "doi": "10.1016/j.jempfin.2018.03.002",
+      "year": 2018,
+      "cover_date": "2018-06-01",
+      "source": "Journal of Empirical Finance",
+      "cited_by": 190,
+      "eid": "2-s2.0-85046149765",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85046149765"
+    },
+    {
+      "title": "The COVID-19 global fear index and the predictability of commodity price returns",
+      "doi": "10.1016/j.jbef.2020.100383",
+      "year": 2020,
+      "cover_date": "2020-09-01",
+      "source": "Journal of Behavioral and Experimental Finance",
+      "cited_by": 170,
+      "eid": "2-s2.0-85088652206",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85088652206"
+    },
+    {
+      "title": "Forecasting the prices of crude oil: An iterated combination approach",
+      "doi": "10.1016/j.eneco.2018.01.027",
+      "year": 2018,
+      "cover_date": "2018-02-01",
+      "source": "Energy Economics",
+      "cited_by": 141,
+      "eid": "2-s2.0-85044388978",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85044388978"
+    },
+    {
+      "title": "Are Indian stock returns predictable?",
+      "doi": "10.1016/j.jbankfin.2015.05.001",
+      "year": 2015,
+      "cover_date": "2015-09-01",
+      "source": "Journal of Banking and Finance",
+      "cited_by": 134,
+      "eid": "2-s2.0-84936773088",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84936773088"
+    },
+    {
+      "title": "Oil price increases and the predictability of equity premium",
+      "doi": "10.1016/j.jbankfin.2019.03.009",
+      "year": 2019,
+      "cover_date": "2019-05-01",
+      "source": "Journal of Banking and Finance",
+      "cited_by": 133,
+      "eid": "2-s2.0-85062987924",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85062987924"
+    },
+    {
+      "title": "Do return prediction models add economic value?",
+      "doi": "10.1016/j.jbankfin.2012.06.008",
+      "year": 2012,
+      "cover_date": "2012-11-01",
+      "source": "Journal of Banking and Finance",
+      "cited_by": 122,
+      "eid": "2-s2.0-84865814666",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84865814666"
+    },
+    {
+      "title": "Predicting the oil prices: Do technical indicators help?",
+      "doi": "10.1016/j.eneco.2016.03.017",
+      "year": 2016,
+      "cover_date": "2016-05-01",
+      "source": "Energy Economics",
+      "cited_by": 113,
+      "eid": "2-s2.0-84963963374",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84963963374"
+    },
+    {
+      "title": "Predicting stock returns: A regime-switching combination approach and economic links",
+      "doi": "10.1016/j.jbankfin.2013.07.016",
+      "year": 2013,
+      "cover_date": "2013-11-01",
+      "source": "Journal of Banking and Finance",
+      "cited_by": 113,
+      "eid": "2-s2.0-84882757254",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84882757254"
+    },
+    {
+      "title": "Predictability of GCC stock returns: The role of geopolitical risk and crude oil returns",
+      "doi": "10.1016/j.eap.2020.09.017",
+      "year": 2020,
+      "cover_date": "2020-12-01",
+      "source": "Economic Analysis and Policy",
+      "cited_by": 109,
+      "eid": "2-s2.0-85092034490",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85092034490"
+    },
+    {
+      "title": "Financial ratios and bankruptcy predictions: An international evidence",
+      "doi": "10.1016/j.iref.2017.07.025",
+      "year": 2017,
+      "cover_date": "2017-09-01",
+      "source": "International Review of Economics and Finance",
+      "cited_by": 102,
+      "eid": "2-s2.0-85025092231",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85025092231"
+    },
+    {
+      "title": "Intraday volatility interaction between the crude oil and equity markets",
+      "doi": "10.1016/j.intfin.2015.07.007",
+      "year": 2016,
+      "cover_date": "2016-01-01",
+      "source": "Journal of International Financial Markets Institutions and Money",
+      "cited_by": 101,
+      "eid": "2-s2.0-84955680457",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84955680457"
+    },
+    {
+      "title": "Improving the predictability of the oil\u2013US stock nexus: The role of macroeconomic variables",
+      "doi": "10.1016/j.econmod.2018.07.029",
+      "year": 2019,
+      "cover_date": "2019-01-01",
+      "source": "Economic Modelling",
+      "cited_by": 101,
+      "eid": "2-s2.0-85051748173",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85051748173"
+    },
+    {
+      "title": "Carbon prices forecasting in quantiles",
+      "doi": "10.1016/j.eneco.2022.105862",
+      "year": 2022,
+      "cover_date": "2022-04-01",
+      "source": "Energy Economics",
+      "cited_by": 96,
+      "eid": "2-s2.0-85126015553",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85126015553"
+    },
+    {
+      "title": "Out-of-sample predictions of bond excess returns and forward rates: An asset allocation perspective",
+      "doi": "10.1093/rfs/hhs069",
+      "year": 2012,
+      "cover_date": "2012-10-01",
+      "source": "Review of Financial Studies",
+      "cited_by": 94,
+      "eid": "2-s2.0-84866708733",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/84866708733"
+    },
+    {
+      "title": "Historical geopolitical risk and the behaviour of stock returns in advanced economies",
+      "doi": "10.1080/1351847X.2021.1968467",
+      "year": 2022,
+      "cover_date": "2022-01-01",
+      "source": "European Journal of Finance",
+      "cited_by": 90,
+      "eid": "2-s2.0-85113607756",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85113607756"
+    },
+    {
+      "title": "Anomalies and the Expected Market Return",
+      "doi": "10.1111/jofi.13099",
+      "year": 2022,
+      "cover_date": "2022-02-01",
+      "source": "Journal of Finance",
+      "cited_by": 89,
+      "eid": "2-s2.0-85121551483",
+      "url": "https://api.elsevier.com/content/abstract/scopus_id/85121551483"
+    }
+  ]
+}

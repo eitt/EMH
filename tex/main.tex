@@ -1,0 +1,50 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{setspace}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage[nameinlink]{cleveref}
+\usepackage[authoryear]{natbib}
+
+\newcommand{\parencite}[1]{\citep{#1}}
+\newcommand{\textcite}[1]{\citet{#1}}
+
+\title{Robust Benchmark-Relative Tests of Weak-Form Efficiency\\
+in Latin American Equity ETFs}
+\author{Leonardo H. Talero-Sarmiento}
+\date{\today}
+
+\begin{document}
+\onehalfspacing
+\maketitle
+
+\begin{abstract}
+This paper evaluates weak-form efficiency in four Latin American equity ETFs (EWZ, EWW, ECH, GXG) using benchmark-relative out-of-sample forecasting tests. The estimand is forecast-loss difference versus a random-walk baseline under a common lagged information set. We implement expanding-window evaluation with horizon gap controls, leakage assertions, and multiple loss metrics (RMSE, MAE, directional accuracy) across six $(L,H)$ configurations. Benchmarks include random walk, historical mean, linear autoregressive, ridge, MLP, and random-forest models, with conditional diffusion evaluated under the same target definition and window protocol.
+
+Random walk remains the lowest-RMSE model in all tested configurations. At short horizon ($H=1$), some simple alternatives are close to random walk but gains are weak or unstable across settings. Diffusion underperforms benchmark models materially and is significantly worse than random walk in all Diebold-Mariano comparisons in this implementation. Diffusion seed and feature ablations indicate substantial sensitivity, and XAI reliance patterns are not stable enough for strong structural interpretation. Findings are therefore interpreted as disciplined evidence of limited extractable short-horizon predictability, not as proof of exploitable inefficiency.
+\end{abstract}
+
+\input{sections/01_introduction}
+\input{sections/02_literature_gap}
+\input{sections/03_data}
+\input{sections/04_methodology}
+\input{sections/05_results}
+\input{sections/06_limitations}
+\input{sections/07_conclusion}
+
+\appendix
+\input{sections/08_appendix}
+
+\bibliographystyle{apalike}
+\bibliography{../paper/references}
+
+\end{document}

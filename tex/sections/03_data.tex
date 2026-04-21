@@ -1,0 +1,46 @@
+\section{Data and Variable Construction}
+
+\subsection{Data Source and Scope}
+Raw adjusted-close prices and volumes are downloaded from Yahoo Finance through \texttt{yfinance}. The empirical assets are EWZ (Brazil), EWW (Mexico), ECH (Chile), and GXG (Colombia). Frequency is daily.
+
+\input{../tables/generated/tab_data_overview.tex}
+
+\Cref{tab:data-overview} reports the effective sample (2015-01-02 to 2023-12-29, 2,264 daily observations). The preprocessing pipeline is deterministic: prices are forward-filled, returns are computed from adjacent adjusted closes, and a tradability mask suppresses inactive observations (missing price or non-positive volume).
+
+\subsection{Variable Construction}
+For asset $i$ at date $t$, let $P_{i,t}$ denote adjusted close and $V_{i,t}$ traded volume. The tradability mask is
+\begin{equation}
+m_{i,t} = \mathbb{1}\!\left(P_{i,t}\text{ observed and }V_{i,t}>0\right).
+\label{eq:mask}
+\end{equation}
+
+The daily log return is
+\begin{equation}
+r_{i,t} = \log\!\left(\frac{P_{i,t}}{P_{i,t-1}}\right)m_{i,t}.
+\label{eq:return}
+\end{equation}
+
+Following \textcite{amihud2002}, the illiquidity proxy is
+\begin{equation}
+\text{illiq}_{i,t} = \frac{|r_{i,t}|}{P_{i,t}V_{i,t}+\varepsilon}, \quad \varepsilon=10^{-8},
+\label{eq:amihud}
+\end{equation}
+and standardized with a 60-day rolling window:
+\begin{equation}
+z^{\text{illiq}}_{i,t} = \frac{\text{illiq}_{i,t}-\mu_{i,t}^{(60)}}{\sigma_{i,t}^{(60)}+\varepsilon}.
+\label{eq:amihud-z}
+\end{equation}
+with \(\mu_{i,t}^{(60)}\) and \(\sigma_{i,t}^{(60)}\) denoting rolling mean and standard deviation. Values undefined in early windows are set to zero in the processed feature matrix.
+
+The model context at forecast origin $t$ is
+\begin{equation}
+\mathcal{X}_{t}=\left\{r_{i,\tau},m_{i,\tau},z^{\text{illiq}}_{i,\tau}\right\}_{i=1,\ldots,N;\,\tau=t-L,\ldots,t-1}.
+\label{eq:context}
+\end{equation}
+
+The $H$-day forecast target is cumulative return
+\begin{equation}
+y^{(H)}_{i,t} = \sum_{j=0}^{H-1} r_{i,t+j}.
+\label{eq:target}
+\end{equation}
+which matches the implementation in the dataset loader used by all competing models.
