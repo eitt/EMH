@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this software or research methodology, please cite it as below."
 authors:
-  - family-names: "Research AI"
-    given-names: "Antigravity"
+  - family-names: Talero-Sarmiento"
+    given-names: "Leonardo H."
 title: "EMH-LatAm: Efficient Market Hypothesis in Latin America via Diffusion Models"
 version: 0.1.0
 date-released: 2026-04-21
