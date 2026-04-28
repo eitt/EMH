@@ -94,6 +94,17 @@ def build_supervised_arrays(
     X = np.stack([feature_stack[i - L : i] for i in origins], axis=0)
     y = np.stack([returns.values[i : i + H].sum(axis=0) for i in origins], axis=0)
 
+    # Add regime conditioning: high volatility indicator
+    # Compute std of returns over the L days for each asset
+    returns_in_window = X[:, :, :, 0]  # [batch, L, N]
+    vol_std = np.std(returns_in_window, axis=1, keepdims=True)  # [batch, 1, N]
+    # High vol if std > median across all
+    median_vol = np.median(vol_std)
+    high_vol = (vol_std > median_vol).astype(float)  # [batch, 1, N]
+    # Add as new feature
+    high_vol_expanded = np.repeat(high_vol, L, axis=1)  # [batch, L, N]
+    X = np.concatenate([X, high_vol_expanded[:, :, :, np.newaxis]], axis=-1)
+
     # Leakage guard at sample construction level.
     if origins[-1] + H - 1 >= T:
         raise AssertionError("Target horizon exceeds available timeline.")
@@ -195,6 +206,8 @@ def train_diffusion_model(
     seed: int,
     cfg: DiffusionTrainConfig,
     device: torch.device,
+    predict_type: str = 'noise',
+    schedule: str = 'linear',
 ) -> tuple[ConditionalDiffusionModel, DiffusionProcess, dict[str, float]]:
     set_global_seed(seed)
     X_sub, y_sub, X_val, y_val = split_inner_train_valid(X_train, y_train)
@@ -208,8 +221,9 @@ def train_diffusion_model(
         target_dim=target_dim,
         context_dim=context_dim,
         hidden_dim=cfg.hidden_dim,
+        predict_type=predict_type,
     ).to(device)
-    process = DiffusionProcess(num_steps=cfg.num_steps, device=device)
+    process = DiffusionProcess(num_steps=cfg.num_steps, schedule=schedule, device=device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
     criterion = torch.nn.MSELoss()
 
@@ -225,9 +239,17 @@ def train_diffusion_model(
             y_b = y_b.to(device)
             context = X_b.view(X_b.shape[0], -1)
             t_idx = torch.randint(0, cfg.num_steps, (X_b.shape[0],), device=device).long()
-            y_noisy, noise = process.add_noise(y_b, t_idx)
-            pred_noise = model(y_noisy, t_idx.float().unsqueeze(1), context)
-            loss = criterion(pred_noise, noise)
+            y_noisy, noise, y_start = process.add_noise(y_b, t_idx)
+            pred = model(y_noisy, t_idx.float().unsqueeze(1), context)
+            
+            if predict_type == 'noise':
+                loss = criterion(pred, noise)
+            elif predict_type == 'x0':
+                pred_x0 = model.predict_x0(y_noisy, t_idx, pred, process.alphas_cumprod)
+                loss = criterion(pred_x0, y_start)
+            else:
+                raise ValueError(f"Unknown predict_type: {predict_type}")
+                
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -241,9 +263,18 @@ def train_diffusion_model(
                 y_v = y_v.to(device)
                 ctx_v = X_v.view(X_v.shape[0], -1)
                 t_idx = torch.randint(0, cfg.num_steps, (X_v.shape[0],), device=device).long()
-                y_noisy, noise = process.add_noise(y_v, t_idx)
-                pred_noise = model(y_noisy, t_idx.float().unsqueeze(1), ctx_v)
-                val_loss_sum += float(criterion(pred_noise, noise).item()) * X_v.shape[0]
+                y_noisy, noise, y_start = process.add_noise(y_v, t_idx)
+                pred = model(y_noisy, t_idx.float().unsqueeze(1), ctx_v)
+                
+                if predict_type == 'noise':
+                    loss = criterion(pred, noise)
+                elif predict_type == 'x0':
+                    pred_x0 = model.predict_x0(y_noisy, t_idx, pred, process.alphas_cumprod)
+                    loss = criterion(pred_x0, y_start)
+                else:
+                    raise ValueError(f"Unknown predict_type: {predict_type}")
+                    
+                val_loss_sum += float(loss.item()) * X_v.shape[0]
                 val_count += X_v.shape[0]
         val_loss = val_loss_sum / max(val_count, 1)
 
@@ -269,6 +300,8 @@ def predict_diffusion(
     X_eval: np.ndarray,
     batch_size: int,
     device: torch.device,
+    n_samples: int = 1,
+    agg: str = 'mean',
 ) -> np.ndarray:
     model.eval()
     preds = []
@@ -277,8 +310,18 @@ def predict_diffusion(
         for X_b, _ in loader:
             X_b = X_b.to(device)
             context = X_b.view(X_b.shape[0], -1)
-            sample = process.sample(model, context, shape=(X_b.shape[0], model.target_dim))
-            preds.append(sample.detach().cpu().numpy())
+            samples = []
+            for _ in range(n_samples):
+                sample = process.sample(model, context, shape=(X_b.shape[0], model.target_dim))
+                samples.append(sample)
+            samples = torch.stack(samples, dim=0)  # [n_samples, batch, dim]
+            if agg == 'mean':
+                pred = samples.mean(dim=0)
+            elif agg == 'median':
+                pred = samples.median(dim=0).values
+            else:
+                raise ValueError(f"Unknown agg: {agg}")
+            preds.append(pred.detach().cpu().numpy())
     return np.concatenate(preds, axis=0)
 
 
@@ -291,17 +334,17 @@ def permutation_importance_by_feature_channel(
     device: torch.device,
 ) -> dict[str, float]:
     rng = np.random.default_rng(seed)
-    baseline_pred = predict_diffusion(model, process, X_val, batch_size=256, device=device)
+    baseline_pred = predict_diffusion(model, process, X_val, batch_size=256, device=device, n_samples=10)
     baseline_rmse = float(np.sqrt(mean_squared_error(y_val, baseline_pred)))
 
-    channel_names = ["returns", "mask", "amihud"]
+    channel_names = ["returns", "mask", "amihud", "regime"]
     channel_count = X_val.shape[3]
     output: dict[str, float] = {}
     for ch in range(channel_count):
         X_perm = X_val.copy()
         perm_idx = rng.permutation(len(X_perm))
         X_perm[:, :, :, ch] = X_perm[perm_idx, :, :, ch]
-        pred_perm = predict_diffusion(model, process, X_perm, batch_size=256, device=device)
+        pred_perm = predict_diffusion(model, process, X_perm, batch_size=256, device=device, n_samples=10)
         rmse_perm = float(np.sqrt(mean_squared_error(y_val, pred_perm)))
         output[channel_names[ch] if ch < len(channel_names) else f"feature_{ch}"] = rmse_perm - baseline_rmse
     return output
@@ -421,9 +464,9 @@ def run_main_robust_evaluation(device: torch.device) -> tuple[pd.DataFrame, pd.D
                 pred_map[name] = model.predict(X_val)
 
             diff_model, diff_proc, diff_meta = train_diffusion_model(
-                X_train, y_train, seed=42 + w_id, cfg=diffusion_cfg, device=device
+                X_train, y_train, seed=42 + w_id, cfg=diffusion_cfg, device=device, predict_type='x0', schedule='cosine'
             )
-            pred_map["Diffusion"] = predict_diffusion(diff_model, diff_proc, X_val, batch_size=256, device=device)
+            pred_map["Diffusion"] = predict_diffusion(diff_model, diff_proc, X_val, batch_size=256, device=device, n_samples=10)
             diffusion_training_rows.append(
                 {
                     "L": L,
@@ -565,8 +608,8 @@ def run_diffusion_sensitivity(device: torch.device) -> None:
                     if not (train_last_origin + H - 1 < val_first_origin):
                         raise AssertionError("Leakage guard failed in diffusion sensitivity.")
 
-                    model, process, _ = train_diffusion_model(X_train, y_train, seed=seed, cfg=cfg, device=device)
-                    pred = predict_diffusion(model, process, X_val, batch_size=256, device=device)
+                    model, process, _ = train_diffusion_model(X_train, y_train, seed=seed, cfg=cfg, device=device, predict_type='x0', schedule='cosine')
+                    pred = predict_diffusion(model, process, X_val, batch_size=256, device=device, n_samples=10)
                     rmse_list.append(float(np.sqrt(mean_squared_error(y_val, pred))))
                     mae_list.append(float(mean_absolute_error(y_val, pred)))
 

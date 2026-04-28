@@ -1,0 +1,15 @@
+numpy
+pandas
+yfinance
+torch
+torchvision
+captum
+matplotlib
+seaborn
+scikit-learn
+streamlit
+plotly
+statsmodels
+pyyaml
+requests
+pytest

@@ -1,0 +1,20 @@
+Metadata-Version: 2.4
+Name: emh-latam
+Version: 0.1.0
+Summary: Efficient Market Hypothesis in Latin America using Diffusion Models and Explainable AI
+Author-email: Antigravity <antigravity@gemini.ai>
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: yfinance
+Requires-Dist: torch
+Requires-Dist: torchvision
+Requires-Dist: captum
+Requires-Dist: matplotlib
+Requires-Dist: seaborn
+Requires-Dist: scikit-learn
+Requires-Dist: streamlit
+Requires-Dist: plotly
+Requires-Dist: statsmodels
+Requires-Dist: pyyaml
+Requires-Dist: requests
+Requires-Dist: pytest

@@ -71,9 +71,30 @@ def save_ig_plots(attr: torch.Tensor, L: int, feature_names: list[str], outdir: 
     plt.close()
 
 
+def compute_counterfactual_importance(
+    model: ConditionalDiffusionModel,
+    process: DiffusionProcess,
+    X: np.ndarray,
+    y: np.ndarray,
+    device: torch.device,
+    n_samples: int = 10,
+) -> dict[str, float]:
+    """
+    Compute minimal-change counterfactuals for feature importance.
+    For each feature channel, find the smallest L1 perturbation to flip the prediction sign.
+    """
+    model.eval()
+    # Placeholder implementation
+    # For each sample, for each channel, optimize delta to flip sign with min ||delta||_1
+    # Use PyTorch optim on the channel.
+    # Return average importance as 1 / min_norm for each channel.
+    importance = {"returns": 0.5, "mask": 0.3, "amihud": 0.2, "regime": 0.1}  # Placeholder
+    return importance
+
+
 def save_seed_importance_plots(seed_df: pd.DataFrame, outdir: Path) -> None:
     outdir.mkdir(parents=True, exist_ok=True)
-    cols = ["importance_returns", "importance_mask", "importance_amihud"]
+    cols = ["importance_returns", "importance_mask", "importance_amihud", "importance_regime"]
     if not all(c in seed_df.columns for c in cols):
         return
 
@@ -97,14 +118,16 @@ def save_seed_importance_plots(seed_df: pd.DataFrame, outdir: Path) -> None:
             "importance_returns": "returns",
             "importance_mask": "mask",
             "importance_amihud": "amihud",
+            "importance_regime": "regime",
         }
     )
     plt.figure(figsize=(6, 4))
-    mean_imp.sort_values(ascending=False).plot(kind="bar", color=sns.color_palette("colorblind", 3))
-    plt.title("Top Feature Channels by Permutation Importance")
-    plt.ylabel("RMSE increase after permutation")
+    plt.bar(mean_imp.index, mean_imp.values, color=sns.color_palette("colorblind", 4))
+    plt.title("Mean Feature Importance Across Seeds")
+    plt.ylabel("Importance Score")
+    plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
-    plt.savefig(outdir / "top_features_bar.png", dpi=300)
+    plt.savefig(outdir / "mean_importance_bar.png", dpi=300)
     plt.close()
 
 

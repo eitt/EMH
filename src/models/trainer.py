@@ -10,13 +10,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class Trainer:
-    def __init__(self, L, H, target_dim, context_dim, device='cpu'):
+    def __init__(self, L, H, target_dim, context_dim, device='cpu', predict_type='noise', schedule='linear'):
         self.device = device
         self.L = L
         self.H = H
+        self.predict_type = predict_type
         
-        self.model = ConditionalDiffusionModel(target_dim, context_dim).to(device)
-        self.diffusion = DiffusionProcess(num_steps=100, device=device)
+        self.model = ConditionalDiffusionModel(target_dim, context_dim, predict_type=predict_type).to(device)
+        self.diffusion = DiffusionProcess(num_steps=100, schedule=schedule, device=device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         self.criterion = nn.MSELoss()
         
@@ -32,13 +33,19 @@ class Trainer:
             t = torch.randint(0, self.diffusion.num_steps, (X.shape[0],), device=self.device).long()
             
             # Add noise to target y
-            y_noisy, noise = self.diffusion.add_noise(y, t)
+            y_noisy, noise, y_start = self.diffusion.add_noise(y, t)
             
-            # Predict noise
+            # Predict
             t_input = t.float().unsqueeze(1)
-            pred_noise = self.model(y_noisy, t_input, context)
+            pred = self.model(y_noisy, t_input, context)
             
-            loss = self.criterion(pred_noise, noise)
+            if self.predict_type == 'noise':
+                loss = self.criterion(pred, noise)
+            elif self.predict_type == 'x0':
+                pred_x0 = self.model.predict_x0(y_noisy, t, pred, self.diffusion.alphas_cumprod)
+                loss = self.criterion(pred_x0, y_start)
+            else:
+                raise ValueError(f"Unknown predict_type: {self.predict_type}")
             
             self.optimizer.zero_grad()
             loss.backward()
@@ -56,10 +63,18 @@ class Trainer:
                 X, y = X.to(self.device), y.to(self.device)
                 context = X.view(X.shape[0], -1)
                 t = torch.randint(0, self.diffusion.num_steps, (X.shape[0],), device=self.device).long()
-                y_noisy, noise = self.diffusion.add_noise(y, t)
+                y_noisy, noise, y_start = self.diffusion.add_noise(y, t)
                 t_input = t.float().unsqueeze(1)
-                pred_noise = self.model(y_noisy, t_input, context)
-                loss = self.criterion(pred_noise, noise)
+                pred = self.model(y_noisy, t_input, context)
+                
+                if self.predict_type == 'noise':
+                    loss = self.criterion(pred, noise)
+                elif self.predict_type == 'x0':
+                    pred_x0 = self.model.predict_x0(y_noisy, t, pred, self.diffusion.alphas_cumprod)
+                    loss = self.criterion(pred_x0, y_start)
+                else:
+                    raise ValueError(f"Unknown predict_type: {self.predict_type}")
+                    
                 total_loss += loss.item()
         return total_loss / len(dataloader)
 
