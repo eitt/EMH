@@ -8,25 +8,46 @@ class ConditionalDiffusionModel(nn.Module):
     Conditional Diffusion Model for financial returns.
     Conditioned on historical context H.
     """
-    def __init__(self, target_dim, context_dim, hidden_dim=128, predict_type='noise'):
+    def __init__(
+        self,
+        target_dim,
+        context_dim,
+        hidden_dim=128,
+        predict_type='noise',
+        context_seq_len: int | None = None,
+    ):
         super().__init__()
         self.target_dim = target_dim
         self.predict_type = predict_type  # 'noise' or 'x0'
-        
+        self.use_context_sequence = context_seq_len is not None
+        self.context_seq_len = context_seq_len
+        self.context_dim = context_dim
+
         # Time embedding for diffusion step t
         self.time_mlp = nn.Sequential(
             nn.Linear(1, hidden_dim),
             nn.SiLU(),
-            nn.Linear(hidden_dim, hidden_dim)
+            nn.Linear(hidden_dim, hidden_dim),
         )
-        
-        # Context processing (could be LSTM/Transformer, using MLP for baseline reproduction/stability)
-        self.context_mlp = nn.Sequential(
-            nn.Linear(context_dim, hidden_dim),
-            nn.SiLU(),
-            nn.Linear(hidden_dim, hidden_dim)
-        )
-        
+
+        if self.use_context_sequence:
+            self.context_encoder = nn.LSTM(
+                input_size=context_dim,
+                hidden_size=hidden_dim,
+                batch_first=True,
+                bidirectional=False,
+            )
+            self.context_proj = nn.Sequential(
+                nn.Linear(hidden_dim, hidden_dim),
+                nn.SiLU(),
+            )
+        else:
+            self.context_mlp = nn.Sequential(
+                nn.Linear(context_dim, hidden_dim),
+                nn.SiLU(),
+                nn.Linear(hidden_dim, hidden_dim),
+            )
+
         # Main denoising network
         # Inputs: noisy_target (target_dim) + time_emb (hidden_dim) + context_emb (hidden_dim)
         self.denoise_net = nn.Sequential(
@@ -34,17 +55,31 @@ class ConditionalDiffusionModel(nn.Module):
             nn.SiLU(),
             nn.Linear(hidden_dim * 2, hidden_dim),
             nn.SiLU(),
-            nn.Linear(hidden_dim, target_dim)
+            nn.Linear(hidden_dim, target_dim),
         )
-        
+
+    def _encode_context(self, context: torch.Tensor) -> torch.Tensor:
+        if self.use_context_sequence:
+            if context.ndim == 4:
+                batch, seq_len, _, _ = context.shape
+                context = context.view(batch, seq_len, -1)
+            elif context.ndim != 3:
+                raise ValueError("Expected 3D or 4D context for sequential encoder.")
+            context_out, _ = self.context_encoder(context)
+            return self.context_proj(context_out[:, -1, :])
+
+        if context.ndim != 2:
+            context = context.view(context.shape[0], -1)
+        return self.context_mlp(context)
+
     def forward(self, x_noisy, t, context):
         # x_noisy: [batch, target_dim]
         # t: [batch, 1]
-        # context: [batch, context_dim]
-        
+        # context: [batch, context_dim] or [batch, L, n_features] or [batch, L, n_assets, n_channels]
+
         t_emb = self.time_mlp(t)
-        c_emb = self.context_mlp(context)
-        
+        c_emb = self._encode_context(context)
+
         combined = torch.cat([x_noisy, t_emb, c_emb], dim=1)
         return self.denoise_net(combined)
         

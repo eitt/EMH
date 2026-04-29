@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.api import VAR
+from statsmodels.regression.linear_model import OLS
 
 
 def to_numpy(x: np.ndarray | torch.Tensor) -> np.ndarray:
@@ -185,6 +186,131 @@ class VARBaselineModel(BaselineModel):
         return preds
 
 
+class ARCHBaselineModel(BaselineModel):
+    """
+    Simple ARCH(1) econometric benchmark.
+
+    The model fits an AR(1) mean equation for each asset and an ARCH(1)
+    model for the squared residuals. The predictive mean is used as a classical
+    econometric comparator in cumulative return forecasting.
+    """
+
+    def __init__(self, use_mean: bool = True):
+        self.use_mean = use_mean
+        self.ar_models: list[OLS] = []
+        self.omega: list[float] = []
+        self.alpha: list[float] = []
+        self.n_assets: int | None = None
+        self.horizon: int | None = None
+
+    def fit(self, x: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor) -> None:
+        x_np = to_numpy(x)
+        self.horizon = to_numpy(y).shape[1]
+        returns = x_np[:, :, :, 0]
+        self.n_assets = returns.shape[2]
+        self.ar_models = []
+        self.omega = []
+        self.alpha = []
+
+        for asset_idx in range(self.n_assets):
+            series = _reconstruct_series(returns[:, :, asset_idx]).astype(float)
+            if len(series) < 10:
+                raise RuntimeError("Not enough observations to fit ARCH model.")
+
+            y_mean = series[1:]
+            X_mean = np.column_stack([np.ones(len(y_mean)), series[:-1]])
+            ar_model = OLS(y_mean, X_mean).fit()
+            residuals = y_mean - ar_model.predict(X_mean)
+            squared = residuals ** 2
+            squared_lag = np.concatenate([[0.0], squared[:-1]])
+            X_var = np.column_stack([np.ones(len(squared)), squared_lag])
+            params = OLS(squared, X_var).fit().params
+            self.ar_models.append(ar_model)
+            self.omega.append(float(params[0]))
+            self.alpha.append(float(params[1]))
+
+    def predict(self, x: np.ndarray | torch.Tensor) -> np.ndarray:
+        if self.n_assets is None or self.horizon is None:
+            raise RuntimeError("ARCHBaselineModel must be fit before predict.")
+        x_np = to_numpy(x)
+        n_samples = x_np.shape[0]
+        preds = np.zeros((n_samples, self.n_assets), dtype=float)
+
+        for asset_idx, ar_model in enumerate(self.ar_models):
+            last_return = x_np[:, -1, asset_idx, 0]
+            params = ar_model.params
+            mean_forecast = params[0] + params[1] * last_return
+            preds[:, asset_idx] = mean_forecast
+        return preds
+
+
+class GARCHBaselineModel(BaselineModel):
+    """
+    Simple GARCH(1,1)-style econometric benchmark.
+
+    The model fits an AR(1) mean equation for each asset and a GARCH(1,1)
+    recurrence for conditional variance. The predicted mean is extrapolated
+    over the horizon to produce cumulative return forecasts.
+    """
+
+    def __init__(self, use_mean: bool = True):
+        self.use_mean = use_mean
+        self.ar_models: list[OLS] = []
+        self.omega: list[float] = []
+        self.alpha: list[float] = []
+        self.beta: list[float] = []
+        self.last_cond_var: list[float] = []
+        self.n_assets: int | None = None
+        self.horizon: int | None = None
+
+    def fit(self, x: np.ndarray | torch.Tensor, y: np.ndarray | torch.Tensor) -> None:
+        x_np = to_numpy(x)
+        self.horizon = to_numpy(y).shape[1]
+        returns = x_np[:, :, :, 0]
+        self.n_assets = returns.shape[2]
+        self.ar_models = []
+        self.omega = []
+        self.alpha = []
+        self.beta = []
+        self.last_cond_var = []
+
+        for asset_idx in range(self.n_assets):
+            series = _reconstruct_series(returns[:, :, asset_idx]).astype(float)
+            if len(series) < 10:
+                raise RuntimeError("Not enough observations to fit GARCH model.")
+
+            y_mean = series[1:]
+            X_mean = np.column_stack([np.ones(len(y_mean)), series[:-1]])
+            ar_model = OLS(y_mean, X_mean).fit()
+            residuals = y_mean - ar_model.predict(X_mean)
+            squared = residuals ** 2
+            var_lag = np.concatenate([[np.var(squared)], squared[:-1]])
+            y_var = squared[1:]
+            X_var = np.column_stack([np.ones(len(y_var)), squared[:-1], var_lag[:-1]])
+            garch_fit = OLS(y_var, X_var).fit()
+            params = garch_fit.params
+
+            self.ar_models.append(ar_model)
+            self.omega.append(float(params[0]))
+            self.alpha.append(float(params[1]))
+            self.beta.append(float(params[2]))
+            self.last_cond_var.append(float(max(var_lag[-1], 1e-8)))
+
+    def predict(self, x: np.ndarray | torch.Tensor) -> np.ndarray:
+        if self.n_assets is None or self.horizon is None:
+            raise RuntimeError("GARCHBaselineModel must be fit before predict.")
+        x_np = to_numpy(x)
+        n_samples = x_np.shape[0]
+        preds = np.zeros((n_samples, self.n_assets), dtype=float)
+
+        for asset_idx, ar_model in enumerate(self.ar_models):
+            last_return = x_np[:, -1, asset_idx, 0]
+            params = ar_model.params
+            mean_forecast = params[0] + params[1] * last_return
+            preds[:, asset_idx] = mean_forecast * float(self.horizon)
+        return preds
+
+
 class RidgeRegressionModel(BaselineModel):
     """Ridge on flattened context (all features)."""
 
@@ -201,16 +327,23 @@ class RidgeRegressionModel(BaselineModel):
 class MLPBaselineModel(BaselineModel):
     """Shallow nonlinear baseline with train-only scaling."""
 
-    def __init__(self, random_state: int = 0):
+    def __init__(
+        self,
+        hidden_layer_sizes: tuple[int, ...] = (32,),
+        alpha: float = 0.0001,
+        max_iter: int = 300,
+        random_state: int = 0,
+    ):
         self.pipeline = Pipeline(
             steps=[
                 ("scaler", StandardScaler()),
                 (
                     "mlp",
                     MLPRegressor(
-                        hidden_layer_sizes=(32,),
+                        hidden_layer_sizes=hidden_layer_sizes,
+                        alpha=alpha,
                         activation="relu",
-                        max_iter=300,
+                        max_iter=max_iter,
                         early_stopping=True,
                         n_iter_no_change=15,
                         random_state=random_state,
@@ -229,11 +362,17 @@ class MLPBaselineModel(BaselineModel):
 class RandomForestBaselineModel(BaselineModel):
     """Tree-based nonlinear baseline."""
 
-    def __init__(self, random_state: int = 0):
+    def __init__(
+        self,
+        n_estimators: int = 200,
+        max_depth: int = 6,
+        min_samples_leaf: int = 5,
+        random_state: int = 0,
+    ):
         self.model = RandomForestRegressor(
-            n_estimators=200,
-            max_depth=6,
-            min_samples_leaf=5,
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_leaf=min_samples_leaf,
             random_state=random_state,
             n_jobs=1,
         )

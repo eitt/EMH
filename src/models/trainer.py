@@ -10,13 +10,28 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class Trainer:
-    def __init__(self, L, H, target_dim, context_dim, device='cpu', predict_type='noise', schedule='linear'):
+    def __init__(
+        self,
+        L,
+        H,
+        target_dim,
+        context_dim,
+        context_seq_len: int | None = None,
+        device='cpu',
+        predict_type='noise',
+        schedule='linear',
+    ):
         self.device = device
         self.L = L
         self.H = H
         self.predict_type = predict_type
-        
-        self.model = ConditionalDiffusionModel(target_dim, context_dim, predict_type=predict_type).to(device)
+
+        self.model = ConditionalDiffusionModel(
+            target_dim,
+            context_dim,
+            predict_type=predict_type,
+            context_seq_len=context_seq_len,
+        ).to(device)
         self.diffusion = DiffusionProcess(num_steps=100, schedule=schedule, device=device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         self.criterion = nn.MSELoss()
@@ -26,8 +41,7 @@ class Trainer:
         total_loss = 0
         for X, y in dataloader:
             X, y = X.to(self.device), y.to(self.device)
-            # Flatten context: [batch, L, N, F] -> [batch, L*N*F]
-            context = X.view(X.shape[0], -1)
+            context = X
             
             # Sample t
             t = torch.randint(0, self.diffusion.num_steps, (X.shape[0],), device=self.device).long()
@@ -61,7 +75,7 @@ class Trainer:
         with torch.no_grad():
             for X, y in dataloader:
                 X, y = X.to(self.device), y.to(self.device)
-                context = X.view(X.shape[0], -1)
+                context = X
                 t = torch.randint(0, self.diffusion.num_steps, (X.shape[0],), device=self.device).long()
                 y_noisy, noise, y_start = self.diffusion.add_noise(y, t)
                 t_input = t.float().unsqueeze(1)
