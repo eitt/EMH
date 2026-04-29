@@ -17,12 +17,14 @@ from statsmodels.stats.diagnostic import acorr_ljungbox
 from statsmodels.tsa.stattools import adfuller
 
 from src.models.benchmarks.baselines import (
+    ARIMAXModel,
     HistoricalMeanModel,
     LinearAutoregressiveModel,
     MLPBaselineModel,
     RandomForestBaselineModel,
     RandomWalkModel,
     RidgeRegressionModel,
+    VARBaselineModel,
 )
 from src.models.diffusion.model import ConditionalDiffusionModel, DiffusionProcess
 from src.stats.diebold_mariano import diebold_mariano_test
@@ -451,12 +453,14 @@ def run_main_robust_evaluation(device: torch.device) -> tuple[pd.DataFrame, pd.D
                 "Random Walk": RandomWalkModel(),
                 "Historical Mean": HistoricalMeanModel(),
                 "AR Linear": LinearAutoregressiveModel(lags=min(5, L)),
+                "ARIMA": ARIMAXModel(order=(1, 0, 0), use_exog=True),
+                "VAR": VARBaselineModel(lags=1),
                 "Ridge": fit_ridge_time_aware(X_train, y_train),
                 "MLP": MLPBaselineModel(random_state=1000 + 17 * w_id + L + H),
                 "Random Forest": RandomForestBaselineModel(random_state=2000 + 19 * w_id + L + H),
             }
             # Fit trainable baselines.
-            for name in ("AR Linear", "MLP", "Random Forest"):
+            for name in ("AR Linear", "ARIMA", "VAR", "MLP", "Random Forest"):
                 model_map[name].fit(X_train, y_train)
 
             pred_map: dict[str, np.ndarray] = {}
