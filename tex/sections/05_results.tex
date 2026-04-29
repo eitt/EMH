@@ -21,7 +21,7 @@
 Random walk is the lowest-RMSE benchmark in all six \((L,H)\) configurations (\Cref{tab:rmse-by-config,tab:model-performance-summary,fig:rmse}). At \(H=1\), random-forest and linear-AR baselines are close to random walk in level terms but do not dominate consistently across lookback settings. At \(H=5\), historical mean and AR-linear models are again close to random walk, while more flexible ML models (MLP) degrade materially.
 
 \subsection{Diffusion Model Performance}
-Diffusion forecasts are substantially worse than benchmark models in this implementation. Average RMSE for diffusion is approximately 0.47--0.64 across configurations, versus approximately 0.02 for \(H=1\) random-walk benchmarks and approximately 0.046 for \(H=5\) random-walk benchmarks (\Cref{tab:rmse-by-config}).
+Diffusion forecasts are worse than benchmark models in most configurations, but the absolute scale is close to the random-walk baseline: approximately 0.0201--0.0203 for \(H=1\) and 0.0464--0.0470 for \(H=5\) (\Cref{tab:rmse-by-config}).
 
 \subsection{Formal Comparative Inference}
 \input{../tables/generated/tab_dm_summary.tex}
@@ -33,7 +33,7 @@ Diffusion forecasts are substantially worse than benchmark models in this implem
   \label{fig:dm-pvalue}
 \end{figure}
 
-\Cref{tab:dm-summary,fig:dm-pvalue} confirms that diffusion is significantly worse than random walk in all six configurations under DM tests. Some baseline models are statistically indistinguishable from random walk at \(H=5\), while ridge and MLP are typically inferior.
+\Cref{tab:dm-summary,fig:dm-pvalue} confirms that diffusion is significantly worse than random walk in four of six configurations under DM tests. At \(H=5\), diffusion is not significantly different from random walk for selected lookback settings, while ridge and MLP are typically inferior.
 
 \subsection{XAI Findings}
 \begin{figure}[!htbp]

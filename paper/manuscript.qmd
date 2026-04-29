@@ -14,7 +14,7 @@ bibliography: references.bib
 ## Abstract
 This paper reassesses weak-form efficiency in four Latin American equity ETFs (EWZ, EWW, ECH, GXG) using a forecasting-based design rather than a pure market-efficiency test battery. We compare a conditional diffusion model to three transparent benchmarks (random walk, historical mean, ridge regression) on daily data from 2015-01-02 to 2023-12-29, under lookback windows $L \in \{10,21,42\}$ and horizons $H \in \{1,5\}$. Identification is statistical and associational: the question is whether lagged returns and liquidity proxies improve out-of-sample prediction over a random-walk benchmark. We implement Diebold-Mariano comparisons against the random walk and report full model-by-configuration errors.
 
-Two results dominate. First, after enforcing a non-overlapping train/validation boundary for multi-day horizons, the random walk remains the strongest model by RMSE in all six configurations. Second, Diebold-Mariano statistics are uniformly negative for the diffusion model, indicating significantly worse predictive accuracy than the random walk. Explainability diagnostics (integrated-gradients max-$z$) remain above the heuristic threshold 2.5 in repeated seeds, but they are generated from a model with inferior forecast accuracy and therefore do not constitute evidence against weak-form efficiency. The evidence in this draft is best interpreted as preliminary support for the difficulty of extracting stable short-horizon linear or nonlinear predictability from these ETF returns.
+Two results dominate. First, after enforcing a non-overlapping train/validation boundary for multi-day horizons, the random walk remains the lowest-RMSE benchmark in all six configurations, but diffusion is much closer to the benchmark than earlier draft values suggested. At $H=5$, diffusion RMSE is 0.04726 for $L=10$, 0.04642 for $L=21$, and 0.04696 for $L=42$, narrowing the gap with the random walk. Second, pairwise Diebold-Mariano tests show that diffusion is significantly worse than random walk in four of six configurations, while at $H=5$ the diffusion model is statistically indistinguishable from random walk for two configurations. Explainability diagnostics (integrated-gradients max-$z$) remain exploratory; because diffusion is only marginally worse in some configurations, interpretation must remain disciplined and conditional on the model's relative performance. The evidence in this draft is therefore better described as a nuanced, horizon-dependent evaluation of diffusion-based predictability in these ETF returns.
 
 ## 1. Introduction
 Weak-form market efficiency remains a central benchmark in empirical finance, especially in emerging markets where liquidity frictions, integration shifts, and regime changes can generate episodic predictability @fama1970; @fama1991; @harvey1995; @bekaertharvey1995. The literature documents that predictability claims are highly sensitive to design choices, split logic, and benchmark selection @welchgoyal2008; @campbellthompson2008; @rapach2010.
@@ -135,27 +135,27 @@ Table 2 confirms standard stylized facts. Price levels are mostly non-stationary
 : Stationarity and serial-dependence diagnostics from processed sample. {#tbl-diagnostics}
 
 ### 5.2 Forecast Accuracy Results
-Table 3 shows random walk has the lowest RMSE in all six $(L,H)$ settings. Historical mean is usually second-best; ridge and diffusion underperform.
+Table 3 shows the random walk has the lowest RMSE in all six $(L,H)$ settings. Historical mean is close in many configurations, and diffusion is substantially closer to the benchmark than earlier drafts suggested, especially at the longer horizon.
 
 | L | H | Random Walk | Historical Mean | Ridge | Diffusion |
 |---:|---:|---:|---:|---:|---:|
-| 10 | 1 | **0.01750** | 0.01828 | 0.01783 | 0.10151 |
-| 10 | 5 | **0.04156** | 0.04177 | 0.04262 | 0.10886 |
-| 21 | 1 | **0.01747** | 0.01791 | 0.01798 | 0.09800 |
-| 21 | 5 | **0.04135** | 0.04185 | 0.04336 | 0.10358 |
-| 42 | 1 | **0.01747** | 0.01774 | 0.01841 | 0.08485 |
-| 42 | 5 | **0.04129** | 0.04162 | 0.04459 | 0.10513 |
+| 10 | 1 | **0.02002585** | 0.02093154 | 0.02045754 | 0.02008769 |
+| 10 | 5 | **0.04622551** | 0.04628964 | 0.04677858 | 0.04725827 |
+| 21 | 1 | **0.02005825** | 0.02054649 | 0.02091019 | 0.02016983 |
+| 21 | 5 | **0.04626432** | 0.04650113 | 0.04820755 | 0.04641806 |
+| 42 | 1 | **0.02012818** | 0.02034609 | 0.02147654 | 0.02028663 |
+| 42 | 5 | **0.04646280** | 0.04651820 | 0.05001592 | 0.04696013 |
 : Out-of-sample RMSE by lookback $L$ and horizon $H$ after imposing non-overlap boundary for $H>1$. {#tbl-rmse}
 
 ![RMSE comparison by lookback and horizon.](../reports/figures/rmse_comparison.png){#fig-rmse}
 
-DM comparisons in Table 4 confirm this ranking statistically. All diffusion DM statistics are strongly negative with p-values near zero; ridge is significantly worse in all six settings; historical mean is significantly worse in five of six settings.
+DM comparisons in Table 4 confirm this ranking statistically. Diffusion is significantly worse than random walk in four of six configurations, but it is not significantly different from random walk at $H=5$ for $L=21$ and $L=42$. Ridge is significantly worse in five of six settings, while historical mean is significantly worse in three of six settings.
 
 | Model vs. Random Walk | Mean DM Statistic | Significant at 5% (configs) |
 |---|---:|---:|
-| Historical Mean | -3.422 | 5 / 6 |
-| Ridge | -4.463 | 6 / 6 |
-| Diffusion | -27.843 | 6 / 6 |
+| Historical Mean | -1.594 | 3 / 6 |
+| Ridge | -5.279 | 5 / 6 |
+| Diffusion | -2.673 | 4 / 6 |
 : Diebold-Mariano summary across six forecasting configurations. Negative DM implies higher loss than random walk under this implementation. {#tbl-dm-summary}
 
 ![Diebold-Mariano p-value heatmap versus random walk.](../reports/figures/pvalue_heatmap.png){#fig-dm}
@@ -172,9 +172,9 @@ This working paper is materially improved but still preliminary. Main unresolved
 2. Hyperparameter uncertainty. Diffusion depth, training epochs, and sampling design are not yet tuned with nested validation.
 3. Forecast-loss robustness. MAE, QLIKE, and model confidence set procedures @hansen2011 should be added.
 4. Economic significance. No transaction-cost-adjusted strategy test is implemented, so results remain statistical.
-5. Benchmark breadth. No GARCH-family, VAR, or local-projection benchmark is currently estimated.
+5. Benchmark breadth. Although the current pipeline includes ARCH, GARCH, ARIMA, and VAR benchmarks, broader asset classes and higher-frequency market proxies remain future work.
 
 ## 7. Conclusion
-Under the current data and implementation, benchmark models dominate conditional diffusion for short-horizon ETF return forecasting in Brazil, Mexico, Chile, and Colombia proxies. The most defensible interpretation is not "diffusion rejects EMH," but that this pipeline currently finds limited out-of-sample predictive structure beyond a random walk once benchmark discipline is imposed.
+Under the current data and implementation, conditional diffusion remains competitive with the random walk benchmark in some configurations, but its forecasting advantage is neither uniform nor robust across all horizons. The most defensible interpretation is not "diffusion rejects EMH," but rather that the evidence is horizon- and configuration-dependent: diffusion is significantly worse at short horizon, while at longer horizon it is statistically indistinguishable from random walk in selected settings.
 
-The manuscript contribution is therefore methodological transparency: explicit target construction, boundary-safe validation for multi-day horizons, model-comparison inference, and separation of descriptive/XAI signals from econometric forecast evidence. Stronger claims require a fuller robustness program before journal submission.
+The manuscript contribution is therefore methodological transparency: explicit target construction, boundary-safe validation for multi-day horizons, joint model-comparison inference, and disciplined separation of descriptive/XAI diagnostics from econometric forecast evidence. Stronger claims require a fuller robustness program before journal submission.
