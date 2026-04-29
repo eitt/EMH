@@ -10,8 +10,7 @@ import seaborn as sns
 import torch
 from captum.attr import IntegratedGradients
 
-from src.models.diffusion.model import ConditionalDiffusionModel
-from src.models.evaluation.data_loader import get_dataloaders
+from src.experiments.run_loop import predict_diffusion
 
 sns.set_theme(style="whitegrid", context="paper", font_scale=1.1)
 
@@ -84,11 +83,47 @@ def compute_counterfactual_importance(
     For each feature channel, find the smallest L1 perturbation to flip the prediction sign.
     """
     model.eval()
-    # Placeholder implementation
-    # For each sample, for each channel, optimize delta to flip sign with min ||delta||_1
-    # Use PyTorch optim on the channel.
-    # Return average importance as 1 / min_norm for each channel.
-    importance = {"returns": 0.5, "mask": 0.3, "amihud": 0.2, "regime": 0.1}  # Placeholder
+    channel_names = ["returns", "mask", "amihud", "regime"]
+    importance = {}
+    n_obs = len(X)
+    for ch_idx, ch_name in enumerate(channel_names):
+        min_norms = []
+        for obs_idx in range(min(n_obs, 50)):  # Limit to 50 samples for speed
+            x_obs = X[obs_idx:obs_idx+1]  # [1, L, N, C]
+            # Baseline prediction
+            baseline_pred = predict_diffusion(model, process, x_obs, batch_size=1, device=device, n_samples=n_samples)
+            baseline_sign = np.sign(baseline_pred.mean(axis=0))  # [N]
+            
+            # Perturb channel ch_idx
+            delta = torch.zeros_like(torch.tensor(x_obs[:, :, :, ch_idx], dtype=torch.float32), requires_grad=True)
+            optimizer = torch.optim.Adam([delta], lr=0.01)
+            min_norm = float('inf')
+            for _ in range(100):  # Optimization steps
+                x_pert = x_obs.copy()
+                x_pert[:, :, :, ch_idx] = (torch.tensor(x_obs[:, :, :, ch_idx]) + delta).detach().numpy()
+                pert_pred = predict_diffusion(model, process, x_pert, batch_size=1, device=device, n_samples=n_samples)
+                pert_sign = np.sign(pert_pred.mean(axis=0))
+                flipped = np.any(pert_sign != baseline_sign)
+                norm = torch.norm(delta, p=1)
+                loss = norm + 1000.0 * (1.0 if not flipped else 0.0)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                if flipped:
+                    current_norm = norm.item()
+                    if current_norm < min_norm:
+                        min_norm = current_norm
+            if min_norm < float('inf'):
+                min_norms.append(min_norm)
+        if min_norms:
+            avg_min_norm = np.mean(min_norms)
+            importance[ch_name] = 1.0 / (1.0 + avg_min_norm)
+        else:
+            importance[ch_name] = 0.0
+    # Normalize
+    total = sum(importance.values())
+    if total > 0:
+        importance = {k: v / total for k, v in importance.items()}
     return importance
 
 

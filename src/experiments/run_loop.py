@@ -160,9 +160,37 @@ def generate_expanding_windows(
 
 
 def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    # Redefined: For models other than RW, % of times sign(pred) == sign(true)
+    # For RW (which predicts 0), this is undefined, so return 0.5 as neutral
+    if np.allclose(y_pred, 0.0):  # RW case
+        return 0.5
     true_sign = np.sign(y_true)
     pred_sign = np.sign(y_pred)
     return float(np.mean(true_sign == pred_sign))
+
+
+def compute_crps(y_true: np.ndarray, samples: np.ndarray) -> float:
+    """Continuous Ranked Probability Score for probabilistic forecasts."""
+    y_true = y_true.flatten()
+    samples = samples.T  # [n_obs, n_samples]
+    n_obs, n_samples = samples.shape
+    crps = 0.0
+    for i in range(n_obs):
+        obs = y_true[i]
+        s = samples[i]
+        s_sorted = np.sort(s)
+        crps += np.mean((s_sorted - obs)**2) - 0.5 * np.mean((s_sorted[:, None] - s_sorted[None, :])**2)
+    return crps / n_obs
+
+
+def compute_calibration_coverage(y_true: np.ndarray, samples: np.ndarray, alpha: float = 0.1) -> float:
+    """Fraction of true values within (1-alpha) prediction interval."""
+    y_true = y_true.flatten()
+    samples = samples.T  # [n_obs, n_samples]
+    lower = np.percentile(samples, 100 * alpha / 2, axis=1)
+    upper = np.percentile(samples, 100 * (1 - alpha / 2), axis=1)
+    coverage = np.mean((y_true >= lower) & (y_true <= upper))
+    return float(coverage)
 
 
 def evaluate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
@@ -464,9 +492,11 @@ def predict_diffusion(
     device: torch.device,
     n_samples: int = 1,
     agg: str = 'mean',
+    return_samples: bool = False,
 ) -> np.ndarray:
     model.eval()
     preds = []
+    all_samples = []
     loader = make_torch_batches(X_eval, np.zeros((len(X_eval), model.target_dim)), batch_size=batch_size, shuffle=False)
     with torch.no_grad():
         for X_b, _ in loader:
@@ -477,6 +507,8 @@ def predict_diffusion(
                 sample = process.sample(model, context, shape=(X_b.shape[0], model.target_dim))
                 samples.append(sample)
             samples = torch.stack(samples, dim=0)  # [n_samples, batch, dim]
+            if return_samples:
+                all_samples.append(samples.detach().cpu().numpy())
             if agg == 'mean':
                 pred = samples.mean(dim=0)
             elif agg == 'median':
@@ -484,6 +516,8 @@ def predict_diffusion(
             else:
                 raise ValueError(f"Unknown agg: {agg}")
             preds.append(pred.detach().cpu().numpy())
+    if return_samples:
+        return np.concatenate(preds, axis=0), np.concatenate(all_samples, axis=0)
     return np.concatenate(preds, axis=0)
 
 
@@ -578,6 +612,7 @@ def run_main_robust_evaluation(device: torch.device) -> tuple[pd.DataFrame, pd.D
     leakage_rows: list[dict[str, object]] = []
     dm_store: dict[tuple[int, int, str], dict[str, list[np.ndarray]]] = {}
     diffusion_training_rows: list[dict[str, object]] = []
+    distributional_rows: list[dict[str, object]] = []
 
     asset_names = list(returns.columns)
 
@@ -649,6 +684,21 @@ def run_main_robust_evaluation(device: torch.device) -> tuple[pd.DataFrame, pd.D
                 schedule='cosine',
             )
             pred_map["Diffusion"] = predict_diffusion(diff_model, diff_proc, X_val, batch_size=256, device=device, n_samples=10)
+            # Compute distributional metrics for diffusion
+            _, diffusion_samples = predict_diffusion(diff_model, diff_proc, X_val, batch_size=256, device=device, n_samples=10, return_samples=True)
+            crps = compute_crps(y_val, diffusion_samples)
+            calibration_80 = compute_calibration_coverage(y_val, diffusion_samples, alpha=0.2)
+            calibration_90 = compute_calibration_coverage(y_val, diffusion_samples, alpha=0.1)
+            distributional_rows.append(
+                {
+                    "L": L,
+                    "H": H,
+                    "window_id": w_id,
+                    "CRPS": crps,
+                    "Calibration_80pct": calibration_80,
+                    "Calibration_90pct": calibration_90,
+                }
+            )
             diffusion_training_rows.append(
                 {
                     "L": L,
@@ -803,6 +853,63 @@ def run_main_robust_evaluation(device: torch.device) -> tuple[pd.DataFrame, pd.D
 
     mcs_df = pd.DataFrame(mcs_rows)
 
+    # Aggregate per-asset performance with MCS status
+    per_asset_df = pd.DataFrame(per_asset_rows)
+    if not per_asset_df.empty:
+        per_asset_agg = (
+            per_asset_df.groupby(["L", "H", "ticker", "model"], as_index=False)
+            .agg(
+                RMSE=("RMSE", "mean"),
+                MAE=("MAE", "mean"),
+                Directional_Accuracy=("Directional_Accuracy", "mean"),
+                N_Windows=("window_id", "nunique"),
+            )
+            .rename(columns={"model": "Model", "ticker": "Asset"})
+        )
+        # Add MCS status per (L,H) - models in MCS for that config
+        mcs_dict = {}
+        for _, row in mcs_df.iterrows():
+            key = (int(row["L"]), int(row["H"]))
+            mcs_dict[key] = row["models_in_mcs"].split(",")
+        per_asset_agg["MCS_Status"] = per_asset_agg.apply(
+            lambda r: "In MCS" if r["Model"] in mcs_dict.get((r["L"], r["H"]), []) else "Excluded",
+            axis=1
+        )
+        per_asset_agg.to_csv(out_dir / "per_asset_performance.csv", index=False)
+
+    # Aggregate per-regime performance
+    regime_df = pd.DataFrame(regime_rows)
+    if not regime_df.empty:
+        regime_agg = (
+            regime_df.groupby(["L", "H", "regime", "model"], as_index=False)
+            .agg(
+                RMSE=("RMSE", "mean"),
+                MAE=("MAE", "mean"),
+                Directional_Accuracy=("Directional_Accuracy", "mean"),
+                N_Windows=("window_id", "nunique"),
+                N_Val_Total=("n_eval", "sum"),
+            )
+            .rename(columns={"model": "Model", "regime": "Regime"})
+        )
+        regime_agg.to_csv(out_dir / "by_regime_performance.csv", index=False)
+
+    # Horizon-stratified inference
+    horizon_df = experiment_df.copy()
+    horizon_df["Horizon"] = horizon_df["H"].map({1: "H=1", 5: "H=5"})
+    # Merge with MCS
+    mcs_wide = mcs_df[["L", "H", "models_in_mcs"]].copy()
+    horizon_agg = horizon_df.merge(mcs_wide, on=["L", "H"], how="left")
+    horizon_agg["MCS_Status"] = horizon_agg.apply(
+        lambda r: "In MCS" if r["Model"] in str(r["models_in_mcs"]).split(",") else "Excluded",
+        axis=1
+    )
+    horizon_agg = horizon_agg.groupby(["Horizon", "Model"], as_index=False).agg(
+        Mean_RMSE=("RMSE", "mean"),
+        MCS_Status=("MCS_Status", "first"),
+        DM_Pvalue=("P_Value", "mean"),
+    )
+    horizon_agg.to_csv(out_dir / "horizon_stratified_inference.csv", index=False)
+
     # Model rank stability by window.
     rank_df = per_window_df.copy()
     rank_df["rmse_rank"] = rank_df.groupby(["L", "H", "window_id"])["RMSE"].rank(method="min")
@@ -824,8 +931,7 @@ def run_main_robust_evaluation(device: torch.device) -> tuple[pd.DataFrame, pd.D
     dm_df.to_csv(out_dir / "dm_tests.csv", index=False)
     rmse_pivot.to_csv(out_dir / "rmse_pivot.csv", index=False)
     leakage_df.to_csv(out_dir / "leakage_checks.csv", index=False)
-    diffusion_train_df.to_csv(out_dir / "diffusion_training_stability.csv", index=False)
-    rank_stability.to_csv(out_dir / "model_rank_stability.csv", index=False)
+    pd.DataFrame(distributional_rows).to_csv(out_dir / "distributional_metrics.csv", index=False)
 
     return experiment_df, per_window_df
 
@@ -870,7 +976,7 @@ def run_diffusion_sensitivity(device: torch.device) -> None:
                     # XAI-style model reliance for full feature set only.
                     if feature_set == "full" and w["window_id"] == 0:
                         imp = permutation_importance_by_feature_channel(model, process, X_val, y_val, seed=seed, device=device)
-                        vec = np.array([imp.get("returns", 0.0), imp.get("mask", 0.0), imp.get("amihud", 0.0)])
+                        vec = np.array([imp.get("returns", 0.0), imp.get("mask", 0.0), imp.get("amihud", 0.0), imp.get("regime", 0.0)])
                         z = (vec - vec.mean()) / (vec.std() + 1e-8)
                         max_z = float(np.max(z))
                         xai_rows.append(
@@ -881,6 +987,7 @@ def run_diffusion_sensitivity(device: torch.device) -> None:
                                 "importance_returns": vec[0],
                                 "importance_mask": vec[1],
                                 "importance_amihud": vec[2],
+                                "importance_regime": vec[3],
                                 "max_z_score": max_z,
                                 "reject_threshold_2p5": bool(max_z > 2.5),
                             }

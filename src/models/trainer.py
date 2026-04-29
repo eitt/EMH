@@ -18,8 +18,8 @@ class Trainer:
         context_dim,
         context_seq_len: int | None = None,
         device='cpu',
-        predict_type='noise',
-        schedule='linear',
+        predict_type='x0',  # Locked to x0 for generative stability
+        schedule='cosine',  # Locked to cosine for smoother variance scaling
     ):
         self.device = device
         self.L = L
