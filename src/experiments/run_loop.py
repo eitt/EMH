@@ -171,26 +171,39 @@ def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 def compute_crps(y_true: np.ndarray, samples: np.ndarray) -> float:
     """Continuous Ranked Probability Score for probabilistic forecasts."""
-    y_true = y_true.flatten()
-    samples = samples.T  # [n_obs, n_samples]
-    n_obs, n_samples = samples.shape
-    crps = 0.0
-    for i in range(n_obs):
-        obs = y_true[i]
-        s = samples[i]
-        s_sorted = np.sort(s)
-        crps += np.mean((s_sorted - obs)**2) - 0.5 * np.mean((s_sorted[:, None] - s_sorted[None, :])**2)
-    return crps / n_obs
+    # samples: [n_samples, n_obs, dim]
+    # y_true: [n_obs, dim]
+    n_samples, n_obs, dim = samples.shape
+    crps_total = 0.0
+    for d in range(dim):
+        y_d = y_true[:, d]
+        s_d = samples[:, :, d]  # [n_samples, n_obs]
+        s_d = s_d.T  # [n_obs, n_samples]
+        crps = 0.0
+        for i in range(n_obs):
+            obs = y_d[i]
+            s = s_d[i]
+            s_sorted = np.sort(s)
+            crps += np.mean((s_sorted - obs)**2) - 0.5 * np.mean((s_sorted[:, None] - s_sorted[None, :])**2)
+        crps_total += crps / n_obs
+    return crps_total / dim
 
 
 def compute_calibration_coverage(y_true: np.ndarray, samples: np.ndarray, alpha: float = 0.1) -> float:
     """Fraction of true values within (1-alpha) prediction interval."""
-    y_true = y_true.flatten()
-    samples = samples.T  # [n_obs, n_samples]
-    lower = np.percentile(samples, 100 * alpha / 2, axis=1)
-    upper = np.percentile(samples, 100 * (1 - alpha / 2), axis=1)
-    coverage = np.mean((y_true >= lower) & (y_true <= upper))
-    return float(coverage)
+    # samples: [n_samples, n_obs, dim]
+    # y_true: [n_obs, dim]
+    n_samples, n_obs, dim = samples.shape
+    coverage_total = 0.0
+    for d in range(dim):
+        y_d = y_true[:, d]
+        s_d = samples[:, :, d]  # [n_samples, n_obs]
+        s_d = s_d.T  # [n_obs, n_samples]
+        lower = np.percentile(s_d, 100 * alpha / 2, axis=1)
+        upper = np.percentile(s_d, 100 * (1 - alpha / 2), axis=1)
+        coverage = np.mean((y_d >= lower) & (y_d <= upper))
+        coverage_total += coverage
+    return float(coverage_total / dim)
 
 
 def evaluate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
@@ -517,7 +530,7 @@ def predict_diffusion(
                 raise ValueError(f"Unknown agg: {agg}")
             preds.append(pred.detach().cpu().numpy())
     if return_samples:
-        return np.concatenate(preds, axis=0), np.concatenate(all_samples, axis=0)
+        return np.concatenate(preds, axis=0), np.concatenate(all_samples, axis=1)
     return np.concatenate(preds, axis=0)
 
 
